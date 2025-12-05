@@ -1,0 +1,256 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* World Cup 2026 Official Colors */
+    --wc-primary: 220 90% 56%; /* Blue */
+    --wc-secondary: 340 90% 55%; /* Pink/Red */
+    --wc-accent: 160 84% 39%; /* Teal */
+    --wc-gold: 45 93% 58%;
+
+    /* Background colors */
+    --background: 222 47% 11%;
+    --foreground: 213 31% 91%;
+
+    /* Card colors */
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+
+    /* Popover */
+    --popover: 224 71% 4%;
+    --popover-foreground: 213 31% 91%;
+
+    /* Primary */
+    --primary: 220 90% 56%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary */
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 213 31% 91%;
+
+    /* Muted */
+    --muted: 223 47% 11%;
+    --muted-foreground: 215 20% 65%;
+
+    /* Accent */
+    --accent: 160 84% 39%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 213 31% 91%;
+
+    /* Border */
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 220 90% 56%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-secondary/20;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary/50 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary;
+  }
+}
+
+@layer components {
+  /* Glassmorphism effect */
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+
+  .glass-card {
+    @apply glass rounded-2xl p-6 shadow-2xl;
+  }
+
+  /* Gradient backgrounds */
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--wc-primary)) 0%, hsl(var(--wc-accent)) 100%);
+  }
+
+  .gradient-secondary {
+    background: linear-gradient(135deg, hsl(var(--wc-secondary)) 0%, hsl(var(--wc-primary)) 100%);
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, hsl(var(--wc-gold)) 0%, hsl(var(--wc-secondary)) 100%);
+  }
+
+  /* Animated gradient */
+  .gradient-animate {
+    background: linear-gradient(-45deg, hsl(var(--wc-primary)), hsl(var(--wc-secondary)), hsl(var(--wc-accent)), hsl(var(--wc-gold)));
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+  }
+
+  @keyframes gradient {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  /* Neon glow effect */
+  .neon {
+    box-shadow: 0 0 20px hsl(var(--wc-primary) / 0.5),
+                0 0 40px hsl(var(--wc-primary) / 0.3),
+                0 0 60px hsl(var(--wc-primary) / 0.1);
+  }
+
+  /* Button styles */
+  .btn-primary {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-primary/50;
+  }
+
+  .btn-secondary {
+    @apply glass hover:bg-white/10 font-semibold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105;
+  }
+
+  /* Input styles */
+  .input-field {
+    @apply glass w-full px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary transition-all duration-300;
+  }
+
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-primary/20;
+  }
+
+  /* Stadium pattern background */
+  .stadium-pattern {
+    background-image:
+      radial-gradient(circle at 20% 80%, hsl(var(--wc-primary) / 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, hsl(var(--wc-accent) / 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, hsl(var(--wc-secondary) / 0.05) 0%, transparent 50%);
+  }
+
+  /* Trophy shine effect */
+  .trophy-shine {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .trophy-shine::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 70%
+    );
+    animation: shine 3s infinite;
+  }
+
+  @keyframes shine {
+    0% {
+      transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+      transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+  }
+
+  /* Pulsing animation */
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      opacity: 1;
+      box-shadow: 0 0 20px hsl(var(--wc-primary) / 0.5);
+    }
+    50% {
+      opacity: 0.8;
+      box-shadow: 0 0 40px hsl(var(--wc-primary) / 0.8);
+    }
+  }
+
+  /* Float animation */
+  .float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  /* Slide in animations */
+  .slide-in-bottom {
+    animation: slide-in-bottom 0.6s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  }
+
+  @keyframes slide-in-bottom {
+    0% {
+      transform: translateY(100px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .slide-in-top {
+    animation: slide-in-top 0.6s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;
+  }
+
+  @keyframes slide-in-top {
+    0% {
+      transform: translateY(-100px);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}

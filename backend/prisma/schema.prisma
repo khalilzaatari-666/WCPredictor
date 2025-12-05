@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String?      @unique
+  username      String       @unique
+  password      String?
+  walletAddress String?      @unique
+  phoneNumber   String?      @unique
+
+  // Authentication Methods
+  authProvider  String       @default("email") // email, phone, google, wallet
+
+  // Email Verification
+  emailVerified             Boolean   @default(false)
+  emailVerificationToken    String?   @unique
+  emailVerificationExpires  DateTime?
+
+  // Phone Verification (OTP)
+  phoneVerified             Boolean   @default(false)
+  phoneVerificationCode     String?
+  phoneVerificationExpires  DateTime?
+
+  // OAuth
+  googleId      String?      @unique
+
+  // Profile
+  displayName   String?
+  avatar        String?
+
+  // Leaderboard
+  totalScore    Int          @default(0)
+  rank          Int?
+  bestPredictionScore Int?
+
+  // Metadata
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  lastLogin     DateTime?
+
+  // Relations
+  predictions   Prediction[]
+  payments      Payment[]
+  achievements  UserAchievement[]
+
+  @@index([email])
+  @@index([username])
+  @@index([walletAddress])
+  @@index([phoneNumber])
+  @@index([googleId])
+  @@index([emailVerificationToken])
+  @@index([totalScore])
+  @@index([rank])
+}
+
+model Prediction {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  predictionId      String   @unique
+  
+  // Group Stage Data
+  groupStandings    Json
+  thirdPlaceTeams   Json
+  
+  // Knockout Data
+  roundOf32         Json
+  roundOf16         Json
+  quarterFinals     Json
+  semiFinals        Json
+  final             Json
+  thirdPlace        Json?
+  
+  // Results
+  champion          String
+  runnerUp          String
+  
+  // Payment & NFT
+  isPaid            Boolean  @default(false)
+  paymentId         String?
+  tokenId           Int?
+  nftHash           String?
+  transactionHash   String?
+  
+  // Image
+  imageUrl          String?
+  qrCodeUrl         String?
+
+  // Scoring
+  score             Int      @default(0)
+  accuracy          Float?   // Percentage accuracy (0-100)
+  isScored          Boolean  @default(false)
+
+  // Metadata
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([userId])
+  @@index([predictionId])
+  @@index([isPaid])
+  @@index([createdAt])
+  @@index([score])
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  user            User     @relation(fields: [userId], references: [id])
+  predictionId    String   @unique
+  userId          String
+
+  // Payment Details
+  amount          Decimal  @db.Decimal(10, 2)
+  currency        String
+  status          String  // pending, completed, failed, refunded
+  paymentMethod   String  // care, crypto, stripe, etc.
+
+  // Provider Specific Details
+  stripePaymentId String?  @unique
+  stripeSessionId String?  @unique
+  cryptoTxHash    String?
+  cryptoNetwork   String?
+
+  // Metadata
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  completedAt     DateTime?
+
+  @@index([userId])
+  @@index([status])
+  @@index([stripePaymentId])
+  @@index([cryptoTxHash])
+}
+
+model Session {
+    id          String   @id @default(cuid())
+    userId      String
+    token       String   @unique
+    expiresAt   DateTime
+    userAgent   String?
+    ipAddress   String?
+
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@index([userId])
+    @@index([token])
+    @@index([expiresAt])
+}
+
+model Achievement {
+  id            String   @id @default(cuid())
+  code          String   @unique // e.g., "first_prediction", "perfect_group"
+  name          String   // Display name
+  description   String
+  icon          String   // Icon name or emoji
+  category      String   // "prediction", "accuracy", "social", "milestone"
+  tier          String   @default("bronze") // bronze, silver, gold, platinum
+  points        Int      @default(0) // Points awarded
+
+  // Requirements
+  requirement   Json     // Flexible requirement definition
+
+  // Metadata
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  users         UserAchievement[]
+
+  @@index([code])
+  @@index([category])
+  @@index([tier])
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  // Progress tracking
+  progress      Int      @default(0) // For achievements with progress (e.g., 5/10 predictions)
+  isCompleted   Boolean  @default(false)
+  completedAt   DateTime?
+
+  // Metadata
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+  @@index([achievementId])
+  @@index([isCompleted])
+}
