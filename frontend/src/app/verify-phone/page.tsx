@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+export const dynamic = 'force-dynamic';
+
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -13,7 +15,7 @@ import {
 import Link from 'next/link';
 import { api } from '@/lib/api';
 
-export default function VerifyPhonePage() {
+function VerifyPhoneContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [phone, setPhone] = useState('');
@@ -329,5 +331,17 @@ export default function VerifyPhonePage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function VerifyPhonePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-wc-primary animate-spin" />
+      </div>
+    }>
+      <VerifyPhoneContent />
+    </Suspense>
   );
 }

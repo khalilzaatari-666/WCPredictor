@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -17,7 +17,7 @@ import { api } from '@/lib/api';
 
 type PageState = 'request' | 'sent' | 'reset' | 'success';
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [state, setState] = useState<PageState>('request');
@@ -368,5 +368,17 @@ export default function ForgotPasswordPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-10 h-10 text-wc-primary animate-spin" />
+      </div>
+    }>
+      <ForgotPasswordContent />
+    </Suspense>
   );
 }

@@ -2,8 +2,8 @@
   "name": "wc2026-frontend",
   "version": "1.0.0",
   "scripts": {
-    "dev": "set NODE_OPTIONS=--max-old-space-size=16384 && next dev",
-    "build": "set NODE_OPTIONS=--max-old-space-size=16384 && next build",
+    "dev": "set next dev",
+    "build": "set NODE_OPTIONS=--max-old-space-size=8192 && next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -11,6 +11,7 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@netlify/plugin-nextjs": "^5.15.1",
     "@stripe/react-stripe-js": "^2.4.0",
     "@stripe/stripe-js": "^2.4.0",
     "@tanstack/react-query": "^5.17.9",
