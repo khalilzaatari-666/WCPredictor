@@ -154,7 +154,7 @@ export const getUserRank = async (req: Request, res: Response) => {
       take: 10,
     });
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         user: {
@@ -167,7 +167,7 @@ export const getUserRank = async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('Get user rank error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: 'Failed to fetch user rank',
       error: error.message,

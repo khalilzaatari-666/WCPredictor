@@ -35,7 +35,7 @@ if (process.env.NODE_ENV !== 'production') {
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Health check
-app.get('/health', (req: express.Request, res: express.Response) => {
+app.get('/health', (_req: express.Request, res: express.Response) => {
     res.json({
         status: 'OK',
         timestamp: new Date().toISOString(),
