@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
 
-export const getAllAchievements = async (res: Response) => {
+export const getAllAchievements = async (_req: Request, res: Response) => {
   try {
     const achievements = await prisma.achievement.findMany({
       orderBy: [
