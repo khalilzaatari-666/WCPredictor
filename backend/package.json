@@ -12,8 +12,10 @@
     "migrate:reset": "prisma migrate reset",
     "generate": "prisma generate",
     "seed": "tsx src/utils/seed.ts",
-    "seed:achievements": "tsx src/scripts/seedAchievements.ts",
-    "list:achievements": "tsx src/scripts/listAchievements.ts",
+    "seed:achievements": "node dist/scripts/seedAchievements.js",
+    "seed:achievements:dev": "tsx src/scripts/seedAchievements.ts",
+    "list:achievements": "node dist/scripts/listAchievements.js",
+    "list:achievements:dev": "tsx src/scripts/listAchievements.ts",
     "test": "jest",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\""
