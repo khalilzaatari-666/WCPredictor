@@ -10,3 +10,5 @@ README.md
 *.swp
 .DS_Store
 coverage
+build
+out

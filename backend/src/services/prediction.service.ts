@@ -120,4 +120,45 @@ function validatePredictionData(data: PredictionData) {
   if (!data.thirdPlaceTeams || data.thirdPlaceTeams.length !== 8) {
     throw new AppError('Must select exactly 8 third place teams', 400);
   }
+
+  // Validate bracket structure if provided
+  if (data.roundOf32) {
+    const {
+      generateExpectedRoundOf32,
+      validateRoundOf32,
+      validateRoundOf16,
+      validateQuarterFinals,
+      validateSemiFinals,
+      validateFinalMatches,
+    } = require('../utils/bracket.utils');
+
+    // Generate expected Round of 32 structure
+    const expectedR32 = generateExpectedRoundOf32(
+      data.groupStandings as Record<string, string[]>,
+      data.thirdPlaceTeams
+    );
+
+    // Validate Round of 32
+    validateRoundOf32(data.roundOf32, expectedR32);
+
+    // Validate Round of 16 if provided
+    if (data.roundOf16) {
+      validateRoundOf16(data.roundOf16, data.roundOf32);
+    }
+
+    // Validate Quarter Finals if provided
+    if (data.quarterFinals) {
+      validateQuarterFinals(data.quarterFinals, data.roundOf16);
+    }
+
+    // Validate Semi Finals if provided
+    if (data.semiFinals) {
+      validateSemiFinals(data.semiFinals, data.quarterFinals);
+    }
+
+    // Validate Final and Third Place if provided
+    if (data.final && data.thirdPlace) {
+      validateFinalMatches(data.final, data.thirdPlace, data.semiFinals);
+    }
+  }
 }

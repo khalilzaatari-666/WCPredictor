@@ -14,3 +14,10 @@ build
 .next
 uploads
 logs
+dist
+npm-debug.log
+*.md
+.vscode
+.idea
+coverage
+.DS_Store

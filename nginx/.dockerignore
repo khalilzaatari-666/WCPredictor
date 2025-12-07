@@ -1,0 +1,12 @@
+# Version control
+.git
+.gitignore
+
+# IDE files
+.vscode
+.idea
+.DS_Store
+
+# Documentation
+*.md
+README.md
