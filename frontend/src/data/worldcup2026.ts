@@ -1,16 +1,16 @@
 // World Cup 2026 Groups Data - Official Draw Results (December 5, 2025)
 export const WORLD_CUP_GROUPS = {
-  A: ['Mexico', 'South Africa', 'South Korea', 'Winner UEFA Play-off D'],
-  B: ['Canada', 'Winner UEFA Play-off A', 'Qatar', 'Switzerland'],
+  A: ['Mexico', 'South Africa', 'South Korea', 'Winner UEFA PO D (DEN/CZE/IRL/MKD)'],
+  B: ['Canada', 'Winner UEFA PO A (ITA/WAL/NIR/BIH)', 'Qatar', 'Switzerland'],
   C: ['Brazil', 'Morocco', 'Haiti', 'Scotland'],
-  D: ['USA', 'Paraguay', 'Australia', 'Winner UEFA Play-off C'],
+  D: ['USA', 'Paraguay', 'Australia', 'Winner UEFA PO C (TUR/ROU/SVK/KOS)'],
   E: ['Germany', 'Curaçao', 'Côte d\'Ivoire', 'Ecuador'],
-  F: ['Netherlands', 'Japan', 'Winner UEFA Play-off B', 'Tunisia'],
+  F: ['Netherlands', 'Japan', 'Winner UEFA PO B (SWE/UKR/POL/ALB)', 'Tunisia'],
   G: ['Belgium', 'Egypt', 'IR Iran', 'New Zealand'],
   H: ['Spain', 'Cabo Verde', 'Saudi Arabia', 'Uruguay'],
-  I: ['France', 'Senegal', 'Winner FIFA Play-off 2', 'Norway'],
+  I: ['France', 'Senegal', 'Winner FIFA PO 2 (IRQ/BOL/SUR)', 'Norway'],
   J: ['Argentina', 'Algeria', 'Austria', 'Jordan'],
-  K: ['Portugal', 'Winner FIFA Play-off 1', 'Uzbekistan', 'Colombia'],
+  K: ['Portugal', 'Winner FIFA PO 1 (COD/JAM/NCL)', 'Uzbekistan', 'Colombia'],
   L: ['England', 'Croatia', 'Ghana', 'Panama'],
 };
 
@@ -20,10 +20,10 @@ export const COUNTRY_FLAGS: Record<string, string> = {
   'Mexico': '🇲🇽',
   'South Africa': '🇿🇦',
   'South Korea': '🇰🇷',
-  'Winner UEFA Play-off D': '🏴',
+  'Winner UEFA PO D (DEN/CZE/IRL/MKD)': '🇪🇺',
   // Group B
   'Canada': '🇨🇦',
-  'Winner UEFA Play-off A': '🏴',
+  'Winner UEFA PO A (ITA/WAL/NIR/BIH)': '🇪🇺',
   'Qatar': '🇶🇦',
   'Switzerland': '🇨🇭',
   // Group C
@@ -35,7 +35,7 @@ export const COUNTRY_FLAGS: Record<string, string> = {
   'USA': '🇺🇸',
   'Paraguay': '🇵🇾',
   'Australia': '🇦🇺',
-  'Winner UEFA Play-off C': '🏴',
+  'Winner UEFA PO C (TUR/ROU/SVK/KOS)': '🇪🇺',
   // Group E
   'Germany': '🇩🇪',
   'Curaçao': '🇨🇼',
@@ -44,7 +44,7 @@ export const COUNTRY_FLAGS: Record<string, string> = {
   // Group F
   'Netherlands': '🇳🇱',
   'Japan': '🇯🇵',
-  'Winner UEFA Play-off B': '🏴',
+  'Winner UEFA PO B (SWE/UKR/POL/ALB)': '🇪🇺',
   'Tunisia': '🇹🇳',
   // Group G
   'Belgium': '🇧🇪',
@@ -59,7 +59,7 @@ export const COUNTRY_FLAGS: Record<string, string> = {
   // Group I
   'France': '🇫🇷',
   'Senegal': '🇸🇳',
-  'Winner FIFA Play-off 2': '🏴',
+  'Winner FIFA PO 2 (IRQ/BOL/SUR)': '🌍',
   'Norway': '🇳🇴',
   // Group J
   'Argentina': '🇦🇷',
@@ -68,7 +68,7 @@ export const COUNTRY_FLAGS: Record<string, string> = {
   'Jordan': '🇯🇴',
   // Group K
   'Portugal': '🇵🇹',
-  'Winner FIFA Play-off 1': '🏴',
+  'Winner FIFA PO 1 (COD/JAM/NCL)': '🌍',
   'Uzbekistan': '🇺🇿',
   'Colombia': '🇨🇴',
   // Group L
