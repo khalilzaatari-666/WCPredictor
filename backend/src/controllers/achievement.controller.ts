@@ -29,46 +29,59 @@ export const getUserAchievements = async (req: Request, res: Response) => {
   try {
     const userId = (req as any).userId;
 
-    const userAchievements = await prisma.userAchievement.findMany({
-      where: { userId },
-      include: {
-        achievement: true,
-      },
+    // Get all system achievements
+    const allAchievements = await prisma.achievement.findMany({
       orderBy: [
-        { isCompleted: 'desc' },
-        { updatedAt: 'desc' },
+        { category: 'asc' },
+        { tier: 'asc' },
+        { points: 'asc' },
       ],
     });
 
+    // Get user's progress
+    const userAchievements = await prisma.userAchievement.findMany({
+      where: { userId },
+    });
+
+    // Map user progress to achievements
+    const mappedAchievements = allAchievements.map(achievement => {
+      const userProgress = userAchievements.find(ua => ua.achievementId === achievement.id);
+      return {
+        id: userProgress?.id, // this might be undefined for locked ones, but frontend loops category arrays
+        code: achievement.code,
+        name: achievement.name,
+        description: achievement.description,
+        icon: achievement.icon,
+        tier: achievement.tier,
+        points: achievement.points,
+        progress: userProgress?.progress || 0,
+        isCompleted: userProgress?.isCompleted || false,
+        completedAt: userProgress?.completedAt || null,
+        requirement: achievement.requirement,
+        category: achievement.category, // Needed for grouping
+      };
+    });
+
     // Group by category
-    const groupedAchievements = userAchievements.reduce((acc: any, ua) => {
-      const category = ua.achievement.category;
+    const groupedAchievements = mappedAchievements.reduce((acc: any, ach) => {
+      const category = ach.category;
       if (!acc[category]) {
         acc[category] = [];
       }
-      acc[category].push({
-        id: ua.id,
-        code: ua.achievement.code,
-        name: ua.achievement.name,
-        description: ua.achievement.description,
-        icon: ua.achievement.icon,
-        tier: ua.achievement.tier,
-        points: ua.achievement.points,
-        progress: ua.progress,
-        isCompleted: ua.isCompleted,
-        completedAt: ua.completedAt,
-        requirement: ua.achievement.requirement,
-      });
+      acc[category].push(ach);
       return acc;
     }, {});
 
     // Calculate stats
     const stats = {
-      total: userAchievements.length,
+      total: allAchievements.length,
       completed: userAchievements.filter(ua => ua.isCompleted).length,
       totalPoints: userAchievements
         .filter(ua => ua.isCompleted)
-        .reduce((sum, ua) => sum + ua.achievement.points, 0),
+        .reduce((sum, ua) => {
+          const achievement = allAchievements.find(a => a.id === ua.achievementId);
+          return sum + (achievement?.points || 0);
+        }, 0),
     };
 
     res.json({
