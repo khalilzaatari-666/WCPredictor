@@ -99,7 +99,6 @@ export default function ProfilePage() {
             </button>
           </div>
           <h2 className="text-2xl font-bold mb-1">{user?.username}</h2>
-          <p className="text-sm text-muted-foreground">Member since 2024</p>
         </motion.div>
 
         {/* Profile Form */}

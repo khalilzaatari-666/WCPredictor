@@ -27,7 +27,7 @@ export const getAllAchievements = async (_req: Request, res: Response) => {
 
 export const getUserAchievements = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = (req as any).userId;
 
     const userAchievements = await prisma.userAchievement.findMany({
       where: { userId },
@@ -333,7 +333,7 @@ export const checkAndAwardAchievements = async (userId: string) => {
 export const getAchievementById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const userId = (req as any).user.userId;
+    const userId = (req as any).userId;
 
     const achievement = await prisma.achievement.findUnique({
       where: { id },
@@ -374,7 +374,7 @@ export const getAchievementById = async (req: Request, res: Response) => {
 export const unlockAchievement = async (req: Request, res: Response) => {
   try {
     const { achievementId } = req.params;
-    const userId = (req as any).user.userId;
+    const userId = (req as any).userId;
 
     // Verify achievement exists
     const achievement = await prisma.achievement.findUnique({
@@ -453,7 +453,7 @@ export const unlockAchievement = async (req: Request, res: Response) => {
 
 export const checkUserAchievements = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = (req as any).userId;
 
     await checkAndAwardAchievements(userId);
 
