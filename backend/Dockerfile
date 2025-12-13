@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM node:20-slim AS base
 
 # Install dependencies only when needed
@@ -9,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     make \
     g++ \
     && rm -rf /var/lib/apt/lists/*
-RUN npm ci --only=production
+RUN --mount=type=cache,target=/root/.npm npm ci --only=production
 
 # Development image
 FROM base AS development
@@ -20,7 +21,7 @@ RUN apt-get update && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm npm ci
 COPY . .
 RUN npx prisma generate
 EXPOSE 4000
@@ -34,9 +35,8 @@ RUN apt-get update && apt-get install -y \
     make \
     g++ \
     && rm -rf /var/lib/apt/lists/*
-COPY package*.json ./
 COPY prisma ./prisma
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 RUN npx prisma generate
 COPY . .
 RUN npm run build

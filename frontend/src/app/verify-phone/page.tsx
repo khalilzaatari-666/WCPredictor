@@ -14,10 +14,12 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/stores/authStore';
 
 function VerifyPhoneContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setAuth } = useAuthStore();
   const [phone, setPhone] = useState('');
   const [username, setUsername] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -126,7 +128,9 @@ function VerifyPhoneContent() {
 
         // Store token if registration was completed
         if (response.data.data.token) {
-          localStorage.setItem('authToken', response.data.data.token);
+          const { user, token } = response.data.data;
+          localStorage.setItem('authToken', token);
+          setAuth(user, token);
           setTimeout(() => {
             router.push('/dashboard');
           }, 1500);

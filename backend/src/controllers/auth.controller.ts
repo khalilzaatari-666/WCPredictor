@@ -36,6 +36,9 @@ export const updateProfile = asyncHandler(async (req: AuthRequest, res: Response
   const userId = req.userId!;
   const updates = req.body;
 
+  console.log('Update profile - userId:', userId);
+  console.log('Update profile - updates:', updates);
+
   const user = await authService.updateUserProfile(userId, updates);
 
   res.json({

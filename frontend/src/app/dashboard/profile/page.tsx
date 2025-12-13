@@ -36,14 +36,32 @@ export default function ProfilePage() {
     setSuccess('');
 
     try {
-      const response = await api.put('/auth/profile', formData);
+      // Filter out empty fields to avoid validation errors
+      const updates: any = {};
+      if (formData.username && formData.username.trim()) {
+        updates.username = formData.username.trim();
+      }
+      if (formData.email && formData.email.trim()) {
+        updates.email = formData.email.trim();
+      }
+      if (formData.phoneNumber && formData.phoneNumber.trim()) {
+        updates.phoneNumber = formData.phoneNumber.trim();
+      }
+      if (formData.walletAddress && formData.walletAddress.trim()) {
+        updates.walletAddress = formData.walletAddress.trim();
+      }
+
+      const response = await api.put('/auth/profile', updates);
       if (response.data.success) {
-        setAuth(response.data.data, localStorage.getItem('authToken') || '');
+        setAuth(response.data.data.user, localStorage.getItem('authToken') || '');
         setSuccess('Profile updated successfully!');
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update profile');
+      console.error('Profile update error:', err);
+      console.error('Response data:', err.response?.data);
+      const errorMsg = err.response?.data?.message || err.response?.data?.error || 'Failed to update profile';
+      setError(errorMsg);
       setTimeout(() => setError(''), 5000);
     } finally {
       setLoading(false);

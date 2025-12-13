@@ -358,9 +358,12 @@ function generateRoundOf32(groupStandings: GroupStanding, thirdPlaceTeams: strin
     }
   });
 
+  // Create a copy of third-place teams to avoid mutating the original array
+  const availableThirdPlaceTeams = [...thirdPlaceTeams];
+
   // Create a map of third-place teams to their groups for assignment
   const thirdPlaceMap: Record<string, string> = {};
-  thirdPlaceTeams.forEach(team => {
+  availableThirdPlaceTeams.forEach(team => {
     const group = Object.keys(thirdPlace).find(g => thirdPlace[g] === team);
     if (group) {
       thirdPlaceMap[team] = group;
@@ -369,19 +372,19 @@ function generateRoundOf32(groupStandings: GroupStanding, thirdPlaceTeams: strin
 
   // Helper function to get a third-place team from allowed groups
   const getThirdPlaceTeam = (allowedGroups: string[]): string | null => {
-    for (const team of thirdPlaceTeams) {
+    for (const team of availableThirdPlaceTeams) {
       const teamGroup = thirdPlaceMap[team];
       if (teamGroup && allowedGroups.includes(teamGroup)) {
         // Remove from available teams to avoid duplicates
-        const index = thirdPlaceTeams.indexOf(team);
+        const index = availableThirdPlaceTeams.indexOf(team);
         if (index > -1) {
-          thirdPlaceTeams.splice(index, 1);
+          availableThirdPlaceTeams.splice(index, 1);
         }
         return team;
       }
     }
     // Fallback: return any remaining third-place team
-    return thirdPlaceTeams.shift() || null;
+    return availableThirdPlaceTeams.shift() || null;
   };
 
   // Official FIFA World Cup 2026 Round of 32 bracket structure

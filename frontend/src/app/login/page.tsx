@@ -15,11 +15,13 @@ import {
   ArrowLeft,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/stores/authStore';
 
 type AuthMethod = 'email' | 'phone' | 'wallet';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { setAuth } = useAuthStore();
   const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -43,7 +45,9 @@ export default function LoginPage() {
       });
 
       if (response.data.success) {
-        localStorage.setItem('authToken', response.data.data.token);
+        const { user, token } = response.data.data;
+        localStorage.setItem('authToken', token);
+        setAuth(user, token);
         router.push('/dashboard');
       }
     } catch (err: any) {
@@ -111,11 +115,20 @@ export default function LoginPage() {
       });
 
       if (response.data.success) {
-        localStorage.setItem('authToken', response.data.data.token);
+        const { user, token } = response.data.data;
+        localStorage.setItem('authToken', token);
+        setAuth(user, token);
         router.push('/dashboard');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Wallet login failed. Please try again.');
+      // Handle MetaMask user rejection
+      if (err.code === 4001) {
+        setError('You rejected the signature request. Please try again and approve the signature to login.');
+      } else if (err.code === -32002) {
+        setError('A MetaMask request is already pending. Please check your MetaMask extension.');
+      } else {
+        setError(err.response?.data?.message || 'Wallet login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

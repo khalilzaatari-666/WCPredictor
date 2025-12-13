@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { AuthRequest } from '../middleware/auth.middleware';
 import prisma from '../config/database';
 
 export const getGlobalLeaderboard = async (req: Request, res: Response) => {
@@ -79,9 +80,16 @@ export const getGlobalLeaderboard = async (req: Request, res: Response) => {
   }
 };
 
-export const getUserRank = async (req: Request, res: Response) => {
+export const getUserRank = async (req: AuthRequest, res: Response) => {
   try {
-    const userId = (req as any).user.userId;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'User ID not found in request',
+      });
+    }
 
     const user = await prisma.user.findUnique({
       where: { id: userId },

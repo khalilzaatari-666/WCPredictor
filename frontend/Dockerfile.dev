@@ -1,12 +1,16 @@
+# syntax=docker/dockerfile:1
 FROM node:20-alpine
 
 WORKDIR /app
+
+# Update npm to latest version
+RUN npm install -g npm@11.6.4
 
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 # Copy the rest of the application
 COPY . .

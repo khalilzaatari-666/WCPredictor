@@ -15,10 +15,12 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
+import { useAuthStore } from '@/stores/authStore';
 
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { setAuth } = useAuthStore();
   const [status, setStatus] = useState<'verifying' | 'success' | 'error' | 'pending'>('pending');
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
@@ -53,7 +55,9 @@ function VerifyEmailContent() {
 
         // Store token and redirect to dashboard
         if (response.data.data.token) {
-          localStorage.setItem('authToken', response.data.data.token);
+          const { user, token } = response.data.data;
+          localStorage.setItem('authToken', token);
+          setAuth(user, token);
           setTimeout(() => {
             router.push('/dashboard');
           }, 2000);

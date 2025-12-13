@@ -8,9 +8,12 @@ export const walletLoginSchema = z.object({
 });
 
 export const updateProfileSchema = z.object({
+  username: z.string().min(3).max(50).optional(),
   displayName: z.string().min(1).max(100).optional(),
   avatar: z.string().url().optional(),
   email: z.string().email().optional(),
+  phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Phone number must be in E.164 format').optional(),
+  walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
 });
 
 export const changePasswordSchema = z.object({

@@ -2,8 +2,8 @@
   "name": "wc2026-frontend",
   "version": "1.0.0",
   "scripts": {
-    "dev": "set next dev",
-    "build": "set NODE_OPTIONS=--max-old-space-size=8192 && next build",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },

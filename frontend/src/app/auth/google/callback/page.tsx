@@ -48,7 +48,7 @@ function GoogleCallbackContent() {
 
           if (response.data.success) {
             // Update auth store with user data and token
-            setAuth(response.data.data, token);
+            setAuth(response.data.data.user, token);
           }
         } catch (profileError) {
           console.error('Failed to fetch user profile:', profileError);

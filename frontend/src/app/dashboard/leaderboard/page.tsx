@@ -23,7 +23,7 @@ interface LeaderboardUser {
   rank: number;
   previousRank?: number;
   accuracy?: number;
-  predictions: number;
+  totalPredictions: number;
 }
 
 export default function LeaderboardPage() {
@@ -40,11 +40,11 @@ export default function LeaderboardPage() {
     setLoading(true);
     try {
       const response = await api.get('/leaderboard');
-      setLeaderboard(response.data.data || []);
+      setLeaderboard(response.data.data.leaderboard || []);
 
       // Fetch user's rank
       const rankResponse = await api.get('/leaderboard/my-rank');
-      setMyRank(rankResponse.data.data);
+      setMyRank(rankResponse.data.data.user);
     } catch (error) {
       console.error('Failed to fetch leaderboard:', error);
       setLeaderboard([]);
@@ -117,10 +117,10 @@ export default function LeaderboardPage() {
                 {getRankIcon(myRank.rank)}
               </div>
               <div>
-                <div className="text-sm text-muted-foreground">Your Rank</div>
-                <div className="text-2xl font-bold">{user?.username}</div>
+                <div className="text-sm text-muted-foreground">Player</div>
+                <div className="text-2xl font-bold">{myRank.username}</div>
                 <div className="text-sm text-muted-foreground">
-                  {myRank.predictions} predictions
+                  {myRank.totalPredictions} predictions
                 </div>
               </div>
             </div>
@@ -185,7 +185,7 @@ export default function LeaderboardPage() {
                       )}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {entry.predictions} predictions
+                      {entry.totalPredictions} predictions
                       {entry.accuracy && ` • ${entry.accuracy}% accuracy`}
                     </div>
                   </div>

@@ -39,6 +39,7 @@ services:
       - redis
     ports:
       - "4000:4000"
+      - "5555:5555"
     networks:
       - wc_network
     volumes:

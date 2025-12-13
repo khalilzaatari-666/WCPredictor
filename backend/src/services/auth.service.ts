@@ -100,7 +100,14 @@ export async function getUserProfile(userId: string) {
 
 export async function updateUserProfile(
   userId: string,
-  updates: { displayName?: string; avatar?: string; email?: string }
+  updates: {
+    username?: string;
+    displayName?: string;
+    avatar?: string;
+    email?: string;
+    phoneNumber?: string;
+    walletAddress?: string;
+  }
 ) {
   const user = await prisma.user.update({
     where: { id: userId },
@@ -109,6 +116,7 @@ export async function updateUserProfile(
       id: true,
       username: true,
       email: true,
+      phoneNumber: true,
       walletAddress: true,
       displayName: true,
       avatar: true,

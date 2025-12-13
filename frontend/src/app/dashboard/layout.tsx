@@ -14,13 +14,12 @@ import {
   LogOut,
   Bell,
   Settings,
-  Menu,
-  X,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/authStore';
 import { AchievementProvider } from '@/contexts/AchievementContext';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 
 export default function DashboardLayout({
   children,
@@ -30,8 +29,6 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { user, isAuthenticated, logout } = useAuthStore();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
@@ -39,19 +36,6 @@ export default function DashboardLayout({
       router.push('/login');
     }
   }, [isAuthenticated, router]);
-
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-      if (window.innerWidth >= 768) {
-        setIsSidebarOpen(false);
-      }
-    };
-
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
 
   const handleLogout = () => {
     logout();
@@ -79,18 +63,7 @@ export default function DashboardLayout({
           <div className="flex items-center justify-between">
             {/* Logo & Mobile Menu */}
             <div className="flex items-center space-x-4">
-              {isMobile && (
-                <button
-                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="p-2 rounded-lg hover:bg-white/5 transition-colors"
-                >
-                  {isSidebarOpen ? (
-                    <X className="w-6 h-6" />
-                  ) : (
-                    <Menu className="w-6 h-6" />
-                  )}
-                </button>
-              )}
+              {/* Mobile Menu Button Removed - replaced by Bottom Nav */}
               <Link href="/dashboard" className="flex items-center space-x-2">
                 <Trophy className="w-8 h-8 text-wc-gold" />
                 <div>
@@ -108,14 +81,6 @@ export default function DashboardLayout({
                 <span className="text-muted-foreground">Welcome,</span>
                 <span className="font-semibold">{user?.username}</span>
               </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-lg hover:bg-white/5 transition-colors relative"
-              >
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-              </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -183,66 +148,12 @@ export default function DashboardLayout({
           </motion.button>
         </motion.aside>
 
-        {/* Mobile Sidebar */}
-        <AnimatePresence>
-          {isMobile && isSidebarOpen && (
-            <>
-              {/* Backdrop */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsSidebarOpen(false)}
-                className="fixed inset-0 bg-black/50 z-40"
-              />
-
-              {/* Sidebar */}
-              <motion.aside
-                initial={{ x: -280 }}
-                animate={{ x: 0 }}
-                exit={{ x: -280 }}
-                transition={{ type: 'spring', damping: 25 }}
-                className="fixed left-0 top-[73px] bottom-0 w-64 glass border-r border-white/10 z-50 overflow-y-auto"
-              >
-                <nav className="p-4 space-y-2">
-                  {navItems.map((item) => {
-                    const isActive = pathname === item.href;
-                    return (
-                      <Link key={item.href} href={item.href}>
-                        <motion.div
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => setIsSidebarOpen(false)}
-                          className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-300 ${
-                            isActive
-                              ? 'bg-wc-primary text-white'
-                              : 'hover:bg-white/5 text-muted-foreground'
-                          }`}
-                        >
-                          <item.icon className="w-5 h-5" />
-                          <span className="font-medium">{item.label}</span>
-                        </motion.div>
-                      </Link>
-                    );
-                  })}
-
-                  {/* Mobile Logout */}
-                  <motion.button
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleLogout}
-                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-red-500/10 text-red-500 transition-all duration-300"
-                  >
-                    <LogOut className="w-5 h-5" />
-                    <span className="font-medium">Logout</span>
-                  </motion.button>
-                </nav>
-              </motion.aside>
-            </>
-          )}
-        </AnimatePresence>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 md:p-8">{children}</main>
+        <main className="flex-1 p-4 md:p-8 pb-24 md:pb-8">{children}</main>
       </div>
+
+      <MobileBottomNav />
     </div>
     </AchievementProvider>
   );
