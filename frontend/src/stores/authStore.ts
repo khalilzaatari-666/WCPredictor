@@ -5,7 +5,10 @@ interface User {
   id: string;
   username: string;
   email?: string;
+  phoneNumber?: string;
   walletAddress?: string;
+  displayName?: string;
+  avatar?: string;
 }
 
 interface AuthState {

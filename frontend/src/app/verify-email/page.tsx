@@ -25,6 +25,7 @@ function VerifyEmailContent() {
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hasVerified, setHasVerified] = useState(false);
 
   useEffect(() => {
     const emailParam = searchParams.get('email');
@@ -34,13 +35,16 @@ function VerifyEmailContent() {
       setEmail(emailParam);
     }
 
-    // If token is provided in URL, auto-verify
-    if (token) {
+    // If token is provided in URL, auto-verify (only once)
+    if (token && !hasVerified) {
       handleVerify(token);
     }
-  }, [searchParams]);
+  }, [searchParams, hasVerified]);
 
   const handleVerify = async (token: string) => {
+    if (hasVerified) return; // Prevent duplicate calls
+
+    setHasVerified(true);
     setStatus('verifying');
     setMessage('Verifying your email...');
 
@@ -69,7 +73,7 @@ function VerifyEmailContent() {
       }
     } catch (err: any) {
       setStatus('error');
-      setMessage(err.response?.data?.message || 'Email verification failed. The link may be invalid or expired.');
+      setMessage(err.response?.data?.error || err.response?.data?.message || 'Email verification failed. The link may be invalid or expired.');
     }
   };
 
@@ -89,7 +93,7 @@ function VerifyEmailContent() {
         setMessage('Verification email sent! Please check your inbox.');
       }
     } catch (err: any) {
-      setMessage(err.response?.data?.message || 'Failed to resend verification email');
+      setMessage(err.response?.data?.error || err.response?.data?.message || 'Failed to resend verification email');
     } finally {
       setLoading(false);
     }
@@ -196,20 +200,18 @@ function VerifyEmailContent() {
           {/* Resend Email Button */}
           {(status === 'pending' || status === 'error') && (
             <div className="space-y-4">
-              {status === 'pending' && (
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-left">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="input-field"
-                  />
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium mb-2 text-left">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="input-field"
+                />
+              </div>
 
               <motion.button
                 whileHover={{ scale: 1.02 }}

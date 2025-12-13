@@ -45,7 +45,7 @@ function ForgotPasswordContent() {
         setState('sent');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send reset email. Please try again.');
+      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to send reset email. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ function ForgotPasswordContent() {
         }, 3000);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to reset password. The link may be invalid or expired.');
+      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to reset password. The link may be invalid or expired.');
     } finally {
       setLoading(false);
     }

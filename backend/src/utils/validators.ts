@@ -12,7 +12,7 @@ export const updateProfileSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
   avatar: z.string().url().optional(),
   email: z.string().email().optional(),
-  phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Phone number must be in E.164 format').optional(),
+  phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Phone number must be in (+1234567890) format').optional(),
   walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
 });
 
@@ -39,16 +39,16 @@ export const verifyEmailSchema = z.object({
 
 // Phone Auth validators
 export const phoneRegisterSchema = z.object({
-  phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Phone number must be in E.164 format (e.g., +1234567890)'),
+  phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Phone number must be in (+1234567890) format'),
   username: z.string().min(3).max(50),
 });
 
 export const phoneLoginSchema = z.object({
-  phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Phone number must be in E.164 format'),
+  phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Phone number must be in (+1234567890) format'),
 });
 
 export const phoneVerifySchema = z.object({
-  phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Phone number must be in E.164 format'),
+  phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Phone number must be in (+1234567890) format'),
   code: z.string().length(6).regex(/^\d{6}$/, 'Code must be 6 digits'),
 });
 
@@ -58,7 +58,7 @@ export const googleAuthSchema = z.object({
   email: z.string().email(),
   displayName: z.string().min(1),
   avatar: z.string().url().optional(),
-  phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Phone number must be in E.164 format').optional(),
+  phoneNumber: z.string().regex(/^\+[1-9]\d{1,14}$/, 'Phone number must be in (+1234567890) format').optional(),
 });
 
 // Prediction validators

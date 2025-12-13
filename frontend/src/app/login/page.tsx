@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -19,6 +19,23 @@ import { useAuthStore } from '@/stores/authStore';
 
 type AuthMethod = 'email' | 'phone' | 'wallet';
 
+// Helper function to parse error messages
+const parseErrorMessage = (error: any, defaultMessage: string): string => {
+  let errorMsg = error?.response?.data?.error || error?.response?.data?.message || defaultMessage;
+
+  // Parse validation errors if it's a JSON string
+  try {
+    const parsed = JSON.parse(errorMsg);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.map((e: any) => e.message).join(', ');
+    }
+  } catch {
+    // If parsing fails, use the original error message
+  }
+
+  return errorMsg;
+};
+
 export default function LoginPage() {
   const router = useRouter();
   const { setAuth } = useAuthStore();
@@ -33,26 +50,40 @@ export default function LoginPage() {
   const [phone, setPhone] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  // Clear error when auth method changes
+  useEffect(() => {
     setError('');
+  }, [authMethod]);
 
+  const handleEmailLogin = async (e: React.FormEvent) => {
     try {
-      const response = await api.post('/auth/email/login', {
-        email,
-        password,
-      });
+      e.preventDefault();
+      e.stopPropagation();
 
-      if (response.data.success) {
-        const { user, token } = response.data.data;
-        localStorage.setItem('authToken', token);
-        setAuth(user, token);
-        router.push('/dashboard');
+      if (loading) return; // Prevent double submission
+
+      setLoading(true);
+      setError('');
+
+      try {
+        const response = await api.post('/auth/email/login', {
+          email,
+          password,
+        });
+
+        if (response.data.success) {
+          const { user, token } = response.data.data;
+          localStorage.setItem('authToken', token);
+          setAuth(user, token);
+          router.push('/dashboard');
+        }
+      } catch (err: any) {
+        setError(parseErrorMessage(err, 'Login failed. Please try again.'));
+      } finally {
+        setLoading(false);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
-    } finally {
+    } catch (err) {
+      console.error('Form submission error:', err);
       setLoading(false);
     }
   };
@@ -72,7 +103,7 @@ export default function LoginPage() {
         router.push(`/verify-phone?phone=${encodeURIComponent(phone)}`);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+      setError(parseErrorMessage(err, 'Failed to send OTP. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -127,7 +158,7 @@ export default function LoginPage() {
       } else if (err.code === -32002) {
         setError('A MetaMask request is already pending. Please check your MetaMask extension.');
       } else {
-        setError(err.response?.data?.message || 'Wallet login failed. Please try again.');
+        setError(parseErrorMessage(err, 'Wallet login failed. Please try again.'));
       }
     } finally {
       setLoading(false);
@@ -258,6 +289,7 @@ export default function LoginPage() {
                 exit={{ opacity: 0, x: -20 }}
                 onSubmit={handleEmailLogin}
                 className="space-y-4"
+                noValidate
               >
                 <div>
                   <label className="block text-sm font-medium mb-2">Email</label>

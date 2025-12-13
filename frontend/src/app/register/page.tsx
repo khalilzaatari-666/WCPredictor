@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -20,6 +20,23 @@ import { api } from '@/lib/api';
 
 type AuthMethod = 'email' | 'phone' | 'wallet';
 
+// Helper function to parse error messages
+const parseErrorMessage = (error: any, defaultMessage: string): string => {
+  let errorMsg = error?.response?.data?.error || error?.response?.data?.message || defaultMessage;
+
+  // Parse validation errors if it's a JSON string
+  try {
+    const parsed = JSON.parse(errorMsg);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.map((e: any) => e.message).join(', ');
+    }
+  } catch {
+    // If parsing fails, use the original error message
+  }
+
+  return errorMsg;
+};
+
 export default function RegisterPage() {
   const router = useRouter();
   const [authMethod, setAuthMethod] = useState<AuthMethod>('email');
@@ -35,6 +52,11 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
+
+  // Clear error when auth method changes
+  useEffect(() => {
+    setError('');
+  }, [authMethod]);
 
   const handleEmailRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +82,7 @@ export default function RegisterPage() {
         router.push(`/verify-email?email=${encodeURIComponent(email)}`);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      setError(parseErrorMessage(err, 'Registration failed. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -82,7 +104,7 @@ export default function RegisterPage() {
         router.push(`/verify-phone?phone=${encodeURIComponent(phone)}&username=${encodeURIComponent(username)}`);
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to send OTP. Please try again.');
+      setError(parseErrorMessage(err, 'Failed to send OTP. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -130,7 +152,7 @@ export default function RegisterPage() {
         router.push('/dashboard');
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Wallet registration failed. Please try again.');
+      setError(parseErrorMessage(err, 'Wallet registration failed. Please try again.'));
     } finally {
       setLoading(false);
     }

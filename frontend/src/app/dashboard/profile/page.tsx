@@ -25,7 +25,7 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     username: user?.username || '',
     email: user?.email || '',
-    phoneNumber: '',
+    phoneNumber: user?.phoneNumber || '',
     walletAddress: user?.walletAddress || '',
   });
 
@@ -36,19 +36,43 @@ export default function ProfilePage() {
     setSuccess('');
 
     try {
+      // Check if adding new email (requires verification)
+      const isAddingEmail = !user?.email && formData.email && formData.email.trim();
+
+      // Check if adding new phone (requires verification)
+      const isAddingPhone = !user?.phoneNumber && formData.phoneNumber && formData.phoneNumber.trim();
+
+      // If adding email, send verification email first
+      if (isAddingEmail) {
+        await api.post('/auth/profile/add-email', { email: formData.email.trim() });
+        setSuccess('Verification email sent! Please check your inbox and verify your email.');
+        setTimeout(() => setSuccess(''), 5000);
+        setLoading(false);
+        return;
+      }
+
+      // If adding phone, send OTP first
+      if (isAddingPhone) {
+        await api.post('/auth/profile/add-phone', { phoneNumber: formData.phoneNumber.trim() });
+        // Redirect to OTP verification page
+        window.location.href = `/verify-phone?phone=${encodeURIComponent(formData.phoneNumber.trim())}&returnTo=/dashboard/profile`;
+        return;
+      }
+
       // Filter out empty fields to avoid validation errors
       const updates: any = {};
       if (formData.username && formData.username.trim()) {
         updates.username = formData.username.trim();
       }
-      if (formData.email && formData.email.trim()) {
-        updates.email = formData.email.trim();
-      }
-      if (formData.phoneNumber && formData.phoneNumber.trim()) {
-        updates.phoneNumber = formData.phoneNumber.trim();
-      }
       if (formData.walletAddress && formData.walletAddress.trim()) {
         updates.walletAddress = formData.walletAddress.trim();
+      }
+
+      // Only update if there are actual changes
+      if (Object.keys(updates).length === 0) {
+        setError('No changes to save');
+        setLoading(false);
+        return;
       }
 
       const response = await api.put('/auth/profile', updates);
@@ -147,7 +171,7 @@ export default function ProfilePage() {
             <div>
               <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                 <Mail className="w-4 h-4" />
-                Email
+                Email {!user?.email && <span className="text-xs text-muted-foreground">(Optional - cannot be changed once set)</span>}
               </label>
               <input
                 type="email"
@@ -155,12 +179,13 @@ export default function ProfilePage() {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
+                placeholder='user@example.com'
                 className="input-field"
                 disabled={!!user?.email}
               />
               {user?.email && (
                 <p className="text-xs text-muted-foreground mt-1">
-                  Email cannot be changed
+                  Email is locked and cannot be changed
                 </p>
               )}
             </div>
@@ -168,7 +193,7 @@ export default function ProfilePage() {
             <div>
               <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                Phone Number (Optional)
+                Phone Number {!user?.phoneNumber && <span className="text-xs text-muted-foreground">(Optional - cannot be changed once set)</span>}
               </label>
               <input
                 type="tel"
@@ -178,23 +203,35 @@ export default function ProfilePage() {
                 }
                 placeholder="+1234567890"
                 className="input-field"
+                disabled={!!user?.phoneNumber}
               />
+              {user?.phoneNumber && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Phone number is locked and cannot be changed
+                </p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                 <Wallet className="w-4 h-4" />
-                Wallet Address
+                Wallet Address {!user?.walletAddress && <span className="text-xs text-muted-foreground">(Optional - cannot be changed once set)</span>}
               </label>
               <input
                 type="text"
                 value={formData.walletAddress}
+                onChange={(e) =>
+                  setFormData({ ...formData, walletAddress: e.target.value })
+                }
+                placeholder="0x..."
                 className="input-field"
-                disabled
+                disabled={!!user?.walletAddress}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Wallet address is linked and cannot be changed
-              </p>
+              {user?.walletAddress && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Wallet address is locked and cannot be changed
+                </p>
+              )}
             </div>
 
             <motion.button

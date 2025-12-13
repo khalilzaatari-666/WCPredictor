@@ -59,6 +59,52 @@ export const changePassword = asyncHandler(async (req: AuthRequest, res: Respons
   });
 });
 
+export const addEmailToProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const userId = req.userId!;
+  const { email } = req.body;
+
+  await authService.addEmailToProfile(userId, email);
+
+  res.json({
+    success: true,
+    message: 'Verification email sent. Please check your inbox.',
+  });
+});
+
+export const addPhoneToProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const userId = req.userId!;
+  const { phoneNumber } = req.body;
+
+  await authService.addPhoneToProfile(userId, phoneNumber);
+
+  res.json({
+    success: true,
+    message: 'OTP sent to your phone number',
+  });
+});
+
+export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  await authService.sendPasswordResetEmail(email);
+
+  res.json({
+    success: true,
+    message: 'Password reset email sent. Please check your inbox.',
+  });
+});
+
+export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
+  const { token, newPassword } = req.body;
+
+  await authService.resetPassword(token, newPassword);
+
+  res.json({
+    success: true,
+    message: 'Password reset successfully. You can now login with your new password.',
+  });
+});
+
 export const logout = asyncHandler(async (req: AuthRequest, res: Response) => {
   const token = req.headers.authorization?.split(' ')[1];
 

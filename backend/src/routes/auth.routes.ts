@@ -4,6 +4,8 @@ import {
   getProfile,
   updateProfile,
   changePassword,
+  addEmailToProfile,
+  addPhoneToProfile,
   logout,
   registerWithEmail,
   verifyEmail,
@@ -16,6 +18,8 @@ import {
   resendOTP,
   initiateGoogleAuth,
   googleAuthCallback,
+  forgotPassword,
+  resetPassword,
 } from '../controllers/auth.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validation.middleware';
@@ -40,6 +44,10 @@ router.post('/email/verify', validateRequest(verifyEmailSchema), verifyEmail);
 router.post('/email/login', validateRequest(emailLoginSchema), loginWithEmail);
 router.post('/email/resend-verification', resendVerificationEmail);
 
+// Password Reset
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
+
 // Phone Authentication
 router.post('/phone/register', validateRequest(phoneRegisterSchema), registerWithPhone);
 router.post('/phone/verify', validateRequest(phoneVerifySchema), verifyPhone);
@@ -58,6 +66,8 @@ router.post('/wallet-login', validateRequest(walletLoginSchema), loginWithWallet
 // Protected routes
 router.get('/profile', authMiddleware, getProfile);
 router.put('/profile', authMiddleware, validateRequest(updateProfileSchema), updateProfile);
+router.post('/profile/add-email', authMiddleware, addEmailToProfile);
+router.post('/profile/add-phone', authMiddleware, addPhoneToProfile);
 router.put('/change-password', authMiddleware, validateRequest(changePasswordSchema), changePassword);
 router.post('/logout', authMiddleware, logout);
 

@@ -156,7 +156,7 @@ export async function sendPasswordResetEmail(
     throw new Error('Email service is not configured');
   }
 
-  const resetUrl = `${FRONTEND_URL}/reset-password?token=${token}`;
+  const resetUrl = `${FRONTEND_URL}/forgot-password?token=${token}`;
 
   try {
     const { data, error } = await resend.emails.send({

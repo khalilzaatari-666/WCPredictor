@@ -109,6 +109,73 @@ export async function updateUserProfile(
     walletAddress?: string;
   }
 ) {
+  // First, fetch the current user
+  const currentUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      username: true,
+      email: true,
+      phoneNumber: true,
+      walletAddress: true,
+    },
+  });
+
+  if (!currentUser) {
+    throw new AppError('User not found', 404);
+  }
+
+  // Check for unique username if username is being changed
+  if (updates.username && updates.username !== currentUser.username) {
+    const existingUser = await prisma.user.findUnique({
+      where: { username: updates.username },
+    });
+
+    if (existingUser) {
+      throw new AppError('Username is already taken', 400);
+    }
+  }
+
+  // Prevent changing any field once it's set (they're locked permanently)
+  if (currentUser.email && updates.email && updates.email !== currentUser.email) {
+    throw new AppError('Email is locked and cannot be changed', 400);
+  }
+
+  if (currentUser.phoneNumber && updates.phoneNumber && updates.phoneNumber !== currentUser.phoneNumber) {
+    throw new AppError('Phone number is locked and cannot be changed', 400);
+  }
+
+  if (currentUser.walletAddress && updates.walletAddress && updates.walletAddress !== currentUser.walletAddress) {
+    throw new AppError('Wallet address is locked and cannot be changed', 400);
+  }
+
+  // Check if email/phone/wallet being added already exists
+  if (updates.email && !currentUser.email) {
+    const existingEmail = await prisma.user.findUnique({
+      where: { email: updates.email },
+    });
+    if (existingEmail) {
+      throw new AppError('Email is already registered to another account', 400);
+    }
+  }
+
+  if (updates.phoneNumber && !currentUser.phoneNumber) {
+    const existingPhone = await prisma.user.findUnique({
+      where: { phoneNumber: updates.phoneNumber },
+    });
+    if (existingPhone) {
+      throw new AppError('Phone number is already registered to another account', 400);
+    }
+  }
+
+  if (updates.walletAddress && !currentUser.walletAddress) {
+    const existingWallet = await prisma.user.findUnique({
+      where: { walletAddress: updates.walletAddress },
+    });
+    if (existingWallet) {
+      throw new AppError('Wallet address is already registered to another account', 400);
+    }
+  }
+
   const user = await prisma.user.update({
     where: { id: userId },
     data: updates,
@@ -126,6 +193,165 @@ export async function updateUserProfile(
   logger.info(`User profile updated: ${user.username}`);
 
   return user;
+}
+
+export async function addEmailToProfile(userId: string, email: string) {
+  // Check if user exists
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, username: true },
+  });
+
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  if (user.email) {
+    throw new AppError('Email is already set and cannot be changed', 400);
+  }
+
+  // Check if email already exists
+  const existingEmail = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (existingEmail) {
+    throw new AppError('Email is already registered to another account', 400);
+  }
+
+  // Generate verification token
+  const verificationToken = crypto.randomBytes(32).toString('hex');
+  const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+  // Store the pending email and verification token
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      emailVerificationToken: verificationToken,
+      emailVerificationExpires: tokenExpiry,
+    },
+  });
+
+  // Send verification email
+  const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`;
+  await emailService.sendVerificationEmail(email, user.username, verificationUrl);
+
+  logger.info(`Email verification sent to ${email} for user ${user.username}`);
+}
+
+export async function addPhoneToProfile(userId: string, phoneNumber: string) {
+  // Check if user exists
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { phoneNumber: true, id: true },
+  });
+
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  if (user.phoneNumber) {
+    throw new AppError('Phone number is already set and cannot be changed', 400);
+  }
+
+  // Check if phone already exists
+  const existingPhone = await prisma.user.findUnique({
+    where: { phoneNumber },
+  });
+
+  if (existingPhone) {
+    throw new AppError('Phone number is already registered to another account', 400);
+  }
+
+  // Generate OTP
+  const otp = smsService.generateOTP();
+  const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+  // Temporarily store the pending phone number in a separate field
+  // We'll use phoneNumber field after verification
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      phoneNumber: phoneNumber, // Store it so verification can find it
+      phoneVerified: false,
+      phoneVerificationCode: otp,
+      phoneVerificationExpires: otpExpires,
+    },
+  });
+
+  // Send OTP via SMS
+  await smsService.sendOTP(phoneNumber, otp);
+
+  logger.info(`OTP sent to ${phoneNumber} for adding to user profile ${userId}`);
+}
+
+export async function sendPasswordResetEmail(email: string) {
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true, username: true, email: true, password: true, authProvider: true },
+  });
+
+  if (!user) {
+    logger.warn(`Password reset requested for non-existent email: ${email}`);
+    throw new AppError('No account found with this email address', 404);
+  }
+
+  // Check if user registered with email (has password or should have password)
+  if (user.authProvider !== 'email' && !user.password) {
+    throw new AppError('This account uses a different login method (phone, wallet, or Google). Password reset is not available.', 400);
+  }
+
+  // Generate reset token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+  // Store reset token
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      passwordResetToken: resetToken,
+      passwordResetExpires: resetExpires,
+    },
+  });
+
+  // Send reset email
+  await emailService.sendPasswordResetEmail(email, resetToken, user.username);
+
+  logger.info(`Password reset email sent to ${email}`);
+}
+
+export async function resetPassword(token: string, newPassword: string) {
+  const user = await prisma.user.findFirst({
+    where: {
+      passwordResetToken: token,
+      passwordResetExpires: {
+        gt: new Date(),
+      },
+    },
+  });
+
+  if (!user) {
+    throw new AppError('Invalid or expired reset token', 400);
+  }
+
+  // Hash new password
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  // Update password, clear reset token, and verify email if not already verified
+  // (User proved they have access to the email by clicking the reset link)
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      password: hashedPassword,
+      passwordResetToken: null,
+      passwordResetExpires: null,
+      emailVerified: true,
+      emailVerificationToken: null,
+      emailVerificationExpires: null,
+    },
+  });
+
+  logger.info(`Password reset successfully for user: ${user.username}`);
 }
 
 export async function changePassword(
