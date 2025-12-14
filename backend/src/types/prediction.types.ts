@@ -1,12 +1,12 @@
 export interface PredictionData {
   groupStandings: Record<string, unknown>;
   thirdPlaceTeams: string[];
-  roundOf32?: Record<string, unknown>;
-  roundOf16?: Record<string, unknown>;
-  quarterFinals?: Record<string, unknown>;
-  semiFinals?: Record<string, unknown>;
-  final?: Record<string, unknown>;
-  thirdPlace?: Record<string, unknown>;
+  roundOf32?: unknown[];
+  roundOf16?: unknown[];
+  quarterFinals?: unknown[];
+  semiFinals?: unknown[];
+  final?: unknown;
+  thirdPlace?: unknown;
   champion?: string;
   runnerUp?: string;
 }

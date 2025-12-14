@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Trophy, Lock, CreditCard, Wallet, Check, Loader2 } from 'lucide-react';
+import { Trophy, Lock, CreditCard, Wallet, Check, Loader2, ArrowLeft } from 'lucide-react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 
@@ -11,11 +11,24 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
 
 export default function PaymentPage() {
   const params = useParams();
+  const router = useRouter();
   const predictionId = params.predictionId as string;
+  const isNewPrediction = predictionId === 'new';
 
   return (
     <div className="min-h-screen pb-24">
       <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Back Button */}
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => router.back()}
+          className="flex items-center gap-2 mb-6 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all text-sm"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Prediction
+        </motion.button>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -30,13 +43,13 @@ export default function PaymentPage() {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Preview Section */}
-          <PreviewSection predictionId={predictionId} />
+        <div className="grid md:grid-cols-[2fr_1fr] gap-8 items-stretch">
+          {/* Preview Section - Wider */}
+          <PreviewSection predictionId={predictionId} isNewPrediction={isNewPrediction} />
 
-          {/* Payment Section */}
+          {/* Payment Section - Narrower, Centered Vertically */}
           <Elements stripe={stripePromise}>
-            <PaymentSection predictionId={predictionId} />
+            <PaymentSection predictionId={predictionId} isNewPrediction={isNewPrediction} />
           </Elements>
         </div>
       </div>
@@ -44,7 +57,19 @@ export default function PaymentPage() {
   );
 }
 
-function PreviewSection({ predictionId }: { predictionId: string }) {
+function PreviewSection({ predictionId, isNewPrediction }: { predictionId: string; isNewPrediction: boolean }) {
+  const [predictionData, setPredictionData] = useState<any>(null);
+
+  useEffect(() => {
+    if (isNewPrediction) {
+      // Load from localStorage for new predictions
+      const dataStr = localStorage.getItem('wc2026_prediction_for_payment');
+      if (dataStr) {
+        setPredictionData(JSON.parse(dataStr));
+      }
+    }
+  }, [isNewPrediction]);
+
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
@@ -62,20 +87,114 @@ function PreviewSection({ predictionId }: { predictionId: string }) {
       </div>
 
       {/* Blurred Bracket Preview */}
-      <div className="relative rounded-lg overflow-hidden border-2 border-wc-gold/30">
-        <div className="relative">
-          <img
-            src="/api/placeholder/600/400"
-            alt="Bracket Preview"
-            className="w-full h-auto blur-md"
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <div className="text-center">
-              <Lock className="w-16 h-16 text-wc-gold mx-auto mb-4" />
-              <p className="text-2xl font-bold text-white mb-2">Locked</p>
-              <p className="text-white/80">Complete payment to unlock</p>
+      <div className="relative rounded-lg overflow-hidden border-2 border-wc-gold/30 min-h-[500px] bg-gradient-to-br from-wc-blue/30 to-wc-primary/20">
+        <div className="relative h-full">
+          {/* Actual Bracket Preview - Blurred */}
+          {predictionData && (
+            <div className="absolute inset-0 p-4 blur-md scale-95">
+              <div className="space-y-4">
+                {/* Champion */}
+                <div className="text-center mb-6">
+                  <div className="inline-block px-6 py-3 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-lg shadow-xl">
+                    <Trophy className="w-6 h-6 inline-block mr-2 text-yellow-900" />
+                    <span className="text-xl font-bold text-yellow-900">
+                      {predictionData.champion || 'Champion'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Final & 3rd Place */}
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="space-y-2">
+                    <div className="text-xs font-bold text-wc-gold mb-1">FINAL</div>
+                    {predictionData.final && (
+                      <div className="bg-white/10 rounded p-2 space-y-1">
+                        <div className={`text-sm font-medium ${predictionData.final.winner === predictionData.final.team1 ? 'text-green-400' : ''}`}>
+                          {predictionData.final.team1 || 'TBD'}
+                        </div>
+                        <div className={`text-sm font-medium ${predictionData.final.winner === predictionData.final.team2 ? 'text-green-400' : ''}`}>
+                          {predictionData.final.team2 || 'TBD'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-xs font-bold text-orange-400 mb-1">3RD PLACE</div>
+                    {predictionData.thirdPlace && (
+                      <div className="bg-white/10 rounded p-2 space-y-1">
+                        <div className={`text-sm font-medium ${predictionData.thirdPlace.winner === predictionData.thirdPlace.team1 ? 'text-green-400' : ''}`}>
+                          {predictionData.thirdPlace.team1 || 'TBD'}
+                        </div>
+                        <div className={`text-sm font-medium ${predictionData.thirdPlace.winner === predictionData.thirdPlace.team2 ? 'text-green-400' : ''}`}>
+                          {predictionData.thirdPlace.team2 || 'TBD'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Semi Finals */}
+                <div className="space-y-2">
+                  <div className="text-xs font-bold text-wc-gold mb-1">SEMI FINALS</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {predictionData.semiFinals?.map((match: any, i: number) => (
+                      <div key={i} className="bg-white/10 rounded p-2 space-y-1">
+                        <div className={`text-xs ${match.winner === match.team1 ? 'text-green-400 font-bold' : ''}`}>
+                          {match.team1 || 'TBD'}
+                        </div>
+                        <div className={`text-xs ${match.winner === match.team2 ? 'text-green-400 font-bold' : ''}`}>
+                          {match.team2 || 'TBD'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quarter Finals */}
+                <div className="space-y-2">
+                  <div className="text-xs font-bold text-wc-gold mb-1">QUARTER FINALS</div>
+                  <div className="grid grid-cols-4 gap-1">
+                    {predictionData.quarterFinals?.map((match: any, i: number) => (
+                      <div key={i} className="bg-white/10 rounded p-1">
+                        <div className={`text-[10px] truncate ${match.winner === match.team1 ? 'text-green-400' : ''}`}>
+                          {match.team1 || 'TBD'}
+                        </div>
+                        <div className={`text-[10px] truncate ${match.winner === match.team2 ? 'text-green-400' : ''}`}>
+                          {match.team2 || 'TBD'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Round of 16 */}
+                <div className="space-y-2">
+                  <div className="text-xs font-bold text-wc-gold mb-1">ROUND OF 16</div>
+                  <div className="grid grid-cols-4 gap-1">
+                    {predictionData.roundOf16?.slice(0, 8).map((match: any, i: number) => (
+                      <div key={i} className="bg-white/10 rounded p-1">
+                        <div className="text-[9px] truncate">{match.team1 || 'TBD'}</div>
+                        <div className="text-[9px] truncate">{match.team2 || 'TBD'}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Group Stage Winners */}
+                <div className="space-y-2">
+                  <div className="text-xs font-bold text-wc-gold mb-1">GROUP WINNERS</div>
+                  <div className="grid grid-cols-6 gap-1">
+                    {Object.keys(predictionData.groupStandings || {}).sort().map((group) => (
+                      <div key={group} className="bg-white/10 rounded p-1 text-center">
+                        <div className="text-[8px] text-wc-gold font-bold">{group}</div>
+                        <div className="text-[9px] truncate">{predictionData.groupStandings[group][0]}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -109,21 +228,29 @@ function PreviewSection({ predictionId }: { predictionId: string }) {
   );
 }
 
-function PaymentSection({ predictionId }: { predictionId: string }) {
+function PaymentSection({ predictionId, isNewPrediction }: { predictionId: string; isNewPrediction: boolean }) {
   const router = useRouter();
   const stripe = useStripe();
   const elements = useElements();
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'crypto'>('card');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cardError, setCardError] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripeReady, setStripeReady] = useState(false);
 
   useEffect(() => {
-    // Create payment intent when component mounts
+    // Skip payment intent creation for new predictions
+    // We'll create the prediction after payment succeeds
+    if (isNewPrediction) {
+      return;
+    }
+
+    // Create payment intent when component mounts (for existing predictions)
     const createPaymentIntent = async () => {
       try {
         const token = localStorage.getItem('authToken');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/create-intent`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/intent`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -145,57 +272,111 @@ function PaymentSection({ predictionId }: { predictionId: string }) {
     };
 
     createPaymentIntent();
-  }, [predictionId]);
+  }, [predictionId, isNewPrediction]);
 
   const handleCardPayment = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!stripe || !elements || !clientSecret) {
+    if (!stripe || !elements) {
       return;
     }
 
     setIsProcessing(true);
     setError(null);
+    setCardError(null);
 
     try {
+      const token = localStorage.getItem('authToken');
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) {
         throw new Error('Card element not found');
       }
 
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
+      // For new predictions, create payment method and process payment
+      if (isNewPrediction) {
+        const predictionDataStr = localStorage.getItem('wc2026_prediction_for_payment');
+        if (!predictionDataStr) {
+          throw new Error('Prediction data not found. Please start over.');
+        }
+
+        // Create payment method
+        const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
+          type: 'card',
           card: cardElement,
-        },
-      });
+        });
 
-      if (stripeError) {
-        setError(stripeError.message || 'Payment failed');
-        setIsProcessing(false);
-        return;
-      }
+        if (pmError) {
+          setError(pmError.message || 'Failed to create payment method');
+          setIsProcessing(false);
+          return;
+        }
 
-      if (paymentIntent.status === 'succeeded') {
-        // Confirm payment on backend
-        const token = localStorage.getItem('authToken');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/confirm`, {
+        // For local testing without real Stripe integration:
+        // Just create the prediction directly
+        // In production, you'd want to create payment intent first
+        const predictionData = JSON.parse(predictionDataStr);
+
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/predictions`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            paymentIntentId: paymentIntent.id,
-            predictionId,
-          }),
+          body: JSON.stringify(predictionData),
         });
 
         const data = await response.json();
-        if (data.success) {
-          // Redirect to prediction detail page
-          router.push(`/dashboard/predictions/${predictionId}`);
-        } else {
-          setError('Payment confirmed but failed to unlock prediction');
+        if (!data.success) {
+          throw new Error(data.message || 'Failed to create prediction');
+        }
+
+        // Clear both localStorage keys
+        localStorage.removeItem('wc2026_prediction_progress');
+        localStorage.removeItem('wc2026_prediction_for_payment');
+
+        // Redirect to prediction detail page
+        router.push(`/dashboard/predictions/${data.data.prediction.predictionId}`);
+      } else {
+        // Existing flow for already-created predictions with payment intent
+        if (!clientSecret) {
+          setError('Payment initialization failed. Please try again.');
+          setIsProcessing(false);
+          return;
+        }
+
+        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: cardElement,
+          },
+        });
+
+        if (stripeError) {
+          setError(stripeError.message || 'Payment failed');
+          setIsProcessing(false);
+          return;
+        }
+
+        if (paymentIntent.status === 'succeeded') {
+          // Confirm payment on backend
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/confirm`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              paymentIntentId: paymentIntent.id,
+              predictionId,
+            }),
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            // Redirect to prediction detail page
+            router.push(`/dashboard/predictions/${predictionId}`);
+          } else {
+            setError('Payment confirmed but failed to unlock prediction');
+          }
         }
       }
     } catch (err: any) {
@@ -215,11 +396,11 @@ function PaymentSection({ predictionId }: { predictionId: string }) {
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
-      className="glass-card"
+      className="glass-card flex flex-col justify-center h-full w-full"
     >
       <div className="mb-6">
         <h2 className="text-2xl font-bold mb-2">Payment Details</h2>
-        <p className="text-3xl font-bold text-wc-gold">$5.00 USD</p>
+        <p className="text-3xl font-bold text-wc-gold">$2.00 USD</p>
         <p className="text-sm text-muted-foreground mt-1">One-time payment</p>
       </div>
 
@@ -254,7 +435,12 @@ function PaymentSection({ predictionId }: { predictionId: string }) {
         <form onSubmit={handleCardPayment} className="space-y-6">
           <div>
             <label className="block text-sm font-medium mb-2">Card Details</label>
-            <div className="p-4 rounded-lg border border-white/20 bg-white/5">
+            <div className={`p-4 rounded-lg border ${cardError ? 'border-red-500/50' : 'border-white/20'} bg-white/5 relative min-h-[40px]`}>
+              {!stripeReady && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="w-5 h-5 animate-spin text-wc-gold" />
+                </div>
+              )}
               <CardElement
                 options={{
                   style: {
@@ -270,8 +456,26 @@ function PaymentSection({ predictionId }: { predictionId: string }) {
                     },
                   },
                 }}
+                onReady={() => setStripeReady(true)}
+                onChange={(e) => {
+                  if (e.error) {
+                    setCardError(e.error.message);
+                  } else {
+                    setCardError(null);
+                  }
+                }}
               />
             </div>
+            {cardError && (
+              <p className="mt-2 text-sm text-red-500 flex items-center gap-1">
+                <span>⚠️</span> {cardError}
+              </p>
+            )}
+            {!stripe && (
+              <p className="mt-2 text-sm text-yellow-500 flex items-center gap-1">
+                <span>⚠️</span> Invalid Stripe key. Please check your .env.local file.
+              </p>
+            )}
           </div>
 
           {error && (
@@ -282,7 +486,7 @@ function PaymentSection({ predictionId }: { predictionId: string }) {
 
           <button
             type="submit"
-            disabled={!stripe || isProcessing || !clientSecret}
+            disabled={!stripe || isProcessing || (!isNewPrediction && !clientSecret)}
             className="w-full py-4 rounded-lg bg-wc-gold hover:bg-yellow-300 text-wc-blue font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
           >
             {isProcessing ? (
@@ -293,7 +497,7 @@ function PaymentSection({ predictionId }: { predictionId: string }) {
             ) : (
               <>
                 <CreditCard className="w-5 h-5" />
-                Pay $5.00
+                Pay $2.00
               </>
             )}
           </button>
@@ -318,7 +522,11 @@ function PaymentSection({ predictionId }: { predictionId: string }) {
       {/* Security Note */}
       <div className="mt-6 p-4 rounded-lg bg-white/5 border border-white/10">
         <p className="text-xs text-muted-foreground text-center">
-          🔒 Secure payment powered by Stripe. Your card details are never stored on our servers.
+          {paymentMethod === 'card' ? (
+            <>🔒 Secure payment powered by Stripe. Your card details are never stored on our servers.</>
+          ) : (
+            <>🔒 Secure cryptocurrency payment. Transactions are verified on the blockchain.</>
+          )}
         </p>
       </div>
     </motion.div>

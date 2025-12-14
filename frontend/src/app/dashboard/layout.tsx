@@ -28,18 +28,18 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout, _hasHydrated } = useAuthStore();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // Only check authentication after store has hydrated from localStorage
+    if (_hasHydrated && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, _hasHydrated, router]);
 
   const handleLogout = () => {
     logout();
-    localStorage.removeItem('authToken');
     router.push('/');
   };
 
@@ -51,6 +51,18 @@ export default function DashboardLayout({
     { icon: Award, label: 'Achievements', href: '/dashboard/achievements' },
     { icon: User, label: 'Profile', href: '/dashboard/profile' },
   ];
+
+  // Show loading state while hydrating
+  if (!_hasHydrated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Trophy className="w-12 h-12 text-wc-gold animate-bounce mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) return null;
 

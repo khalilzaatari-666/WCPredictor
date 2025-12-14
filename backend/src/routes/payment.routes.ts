@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import express from 'express';
 import {
   createPaymentIntent,
   confirmPayment,
@@ -13,8 +12,8 @@ import { paymentIntentSchema } from '../utils/validators';
 
 const router = Router();
 
-// Webhook routes (no auth, raw body needed)
-router.post('/webhook/stripe', express.raw({ type: 'application/json' }), stripeWebhook);
+// Webhook routes (no auth, raw body handled in app.ts)
+router.post('/webhook/stripe', stripeWebhook);
 router.post('/webhook/crypto', cryptoWebhook);
 
 // Protected routes

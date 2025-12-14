@@ -65,12 +65,12 @@ export const googleAuthSchema = z.object({
 export const predictionSchema = z.object({
   groupStandings: z.record(z.array(z.string()).length(4)),
   thirdPlaceTeams: z.array(z.string()).length(8),
-  roundOf32: z.record(z.any()).optional(),
-  roundOf16: z.record(z.any()).optional(),
-  quarterFinals: z.record(z.any()).optional(),
-  semiFinals: z.record(z.any()).optional(),
-  final: z.record(z.any()).optional(),
-  thirdPlace: z.record(z.any()).optional(),
+  roundOf32: z.array(z.any()).optional(),
+  roundOf16: z.array(z.any()).optional(),
+  quarterFinals: z.array(z.any()).optional(),
+  semiFinals: z.array(z.any()).optional(),
+  final: z.any().optional(),
+  thirdPlace: z.any().optional(),
   champion: z.string().optional(),
   runnerUp: z.string().optional(),
 });

@@ -73,14 +73,16 @@ export default function MatchPredictionStep({ round, bracket, onBracketChange }:
         };
       }
       // Losers go to 3rd place match
-      if (bracket.thirdPlace) {
+      if (bracket.thirdPlace && bracket.semiFinals && bracket.semiFinals[matchIndex]) {
         const currentMatch = bracket.semiFinals[matchIndex];
-        const loser = currentMatch.team1 === winner ? currentMatch.team2 : currentMatch.team1;
-        const isTeam1 = matchIndex === 0;
-        bracket.thirdPlace = {
-          ...bracket.thirdPlace,
-          [isTeam1 ? 'team1' : 'team2']: loser,
-        };
+        if (currentMatch.team1 && currentMatch.team2) {
+          const loser = currentMatch.team1 === winner ? currentMatch.team2 : currentMatch.team1;
+          const isTeam1 = matchIndex === 0;
+          bracket.thirdPlace = {
+            ...bracket.thirdPlace,
+            [isTeam1 ? 'team1' : 'team2']: loser,
+          };
+        }
       }
     }
   };
@@ -113,7 +115,7 @@ export default function MatchPredictionStep({ round, bracket, onBracketChange }:
       </motion.div>
 
       {/* Matches Grid */}
-      <div className={`grid gap-4 ${round === 'final' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
+      <div className={`grid gap-4 items-stretch ${round === 'final' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
         {matches.map((match, index) => (
           <PredictableMatch
             key={match.id}
@@ -185,7 +187,7 @@ function PredictableMatch({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ delay: matchNumber * 0.05 }}
-      className={`border-2 ${getBorderColor()} rounded-xl overflow-hidden backdrop-blur-sm ${
+      className={`border-2 ${getBorderColor()} rounded-xl overflow-hidden backdrop-blur-sm h-full flex flex-col ${
         winner ? 'bg-white/5' : 'bg-white/10'
       }`}
     >
@@ -199,7 +201,7 @@ function PredictableMatch({
       </div>
 
       {/* Teams */}
-      <div className="p-4">
+      <div className="p-4 flex-1 flex flex-col justify-center">
         <TeamButton
           team={team1}
           isSelected={winner === team1}

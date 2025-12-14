@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCcw, AlertTriangle, X } from 'lucide-react';
 import { WORLD_CUP_GROUPS, GroupStanding, TournamentBracket, BracketMatch } from '@/data/worldcup2026';
 import GroupStageStep from '@/components/prediction/GroupStageStep';
 import ThirdPlaceSelectionStep from '@/components/prediction/ThirdPlaceSelectionStep';
@@ -14,6 +14,9 @@ type PredictionStep =
   | { type: 'thirdPlace' }
   | { type: 'matchPrediction'; round: 'roundOf32' | 'roundOf16' | 'quarterFinals' | 'semiFinals' | 'final' };
 
+const PREDICTION_STORAGE_KEY = 'wc2026_prediction_progress';
+const PREDICTION_PAYMENT_KEY = 'wc2026_prediction_for_payment';
+
 export default function PredictPage() {
   const router = useRouter();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -21,6 +24,8 @@ export default function PredictPage() {
   const [thirdPlaceTeams, setThirdPlaceTeams] = useState<string[]>([]);
   const [bracket, setBracket] = useState<TournamentBracket>(initializeBracket());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [showClearModal, setShowClearModal] = useState(false);
 
   // Define all steps in order
   const steps: PredictionStep[] = [
@@ -34,6 +39,43 @@ export default function PredictPage() {
   ];
 
   const currentStep = steps[currentStepIndex];
+
+  // Load saved progress on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(PREDICTION_STORAGE_KEY);
+      if (saved) {
+        const { currentStepIndex: savedStep, groupStandings: savedGroups, thirdPlaceTeams: savedThird, bracket: savedBracket } = JSON.parse(saved);
+        setCurrentStepIndex(savedStep || 0);
+        setGroupStandings(savedGroups || {});
+        setThirdPlaceTeams(savedThird || []);
+        if (savedBracket) {
+          setBracket(savedBracket);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading saved prediction:', error);
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  // Save progress whenever state changes
+  useEffect(() => {
+    if (isLoaded) {
+      try {
+        const progressData = {
+          currentStepIndex,
+          groupStandings,
+          thirdPlaceTeams,
+          bracket,
+        };
+        localStorage.setItem(PREDICTION_STORAGE_KEY, JSON.stringify(progressData));
+      } catch (error) {
+        console.error('Error saving prediction progress:', error);
+      }
+    }
+  }, [currentStepIndex, groupStandings, thirdPlaceTeams, bracket, isLoaded]);
 
   useEffect(() => {
     // Auto-generate bracket rounds as user progresses
@@ -111,6 +153,19 @@ export default function PredictPage() {
     setBracket(updatedBracket);
   };
 
+  const handleClearProgress = () => {
+    setShowClearModal(true);
+  };
+
+  const confirmClearProgress = () => {
+    localStorage.removeItem(PREDICTION_STORAGE_KEY);
+    setCurrentStepIndex(0);
+    setGroupStandings({});
+    setThirdPlaceTeams([]);
+    setBracket(initializeBracket());
+    setShowClearModal(false);
+  };
+
   const canProceed = () => {
     if (currentStep.type === 'group') {
       const standings = groupStandings[currentStep.group];
@@ -147,28 +202,15 @@ export default function PredictPage() {
         runnerUp: bracket.final?.team1 === bracket.final?.winner ? bracket.final?.team2 : bracket.final?.team1,
       };
 
-      // Create unpaid prediction
-      const token = localStorage.getItem('authToken');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/predictions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(predictionData),
-      });
+      // Store prediction data temporarily for payment page
+      // Don't save to database until payment is complete
+      localStorage.setItem(PREDICTION_PAYMENT_KEY, JSON.stringify(predictionData));
 
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || 'Failed to create prediction');
-      }
-
-      // Redirect to payment page
-      router.push(`/dashboard/payment/${data.data.prediction.id}`);
+      // Redirect to payment page (no ID yet since not saved to DB)
+      router.push('/dashboard/payment/new');
     } catch (error: any) {
-      console.error('Error submitting prediction:', error);
-      alert(error.message || 'Failed to submit prediction. Please try again.');
+      console.error('Error preparing prediction:', error);
+      alert(error.message || 'Failed to prepare prediction. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -272,7 +314,7 @@ export default function PredictPage() {
 
       {/* Navigation Footer */}
       <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-lg border-t border-white/10 p-4 z-50">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <div className="max-w-7xl mx-auto flex justify-between items-center gap-4">
           <button
             onClick={handleBack}
             disabled={currentStepIndex === 0}
@@ -282,27 +324,122 @@ export default function PredictPage() {
             Back
           </button>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleNext}
-              disabled={!canProceed() || isSubmitting}
-              className="flex items-center gap-2 px-6 py-3 rounded-lg bg-wc-gold hover:bg-yellow-300 text-wc-blue font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          {currentStepIndex > 0 && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleClearProgress}
+              className="flex items-center gap-2 px-5 py-3 text-sm font-semibold rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-500 border-2 border-red-500/40 hover:border-red-500/60 transition-all shadow-lg shadow-red-500/10"
+              title="Clear all progress and start over"
             >
-              {isSubmitting ? (
-                <>
-                  <span className="animate-spin">⏳</span>
-                  Submitting...
-                </>
-              ) : (
-                <>
-                  {currentStepIndex === steps.length - 1 ? 'Finish' : 'Next'}
-                  <ChevronRight className="w-5 h-5" />
-                </>
-              )}
-            </button>
-          </div>
+              <RotateCcw className="w-5 h-5" />
+              <span className="hidden sm:inline">Start Over</span>
+            </motion.button>
+          )}
+
+          <button
+            onClick={handleNext}
+            disabled={!canProceed() || isSubmitting}
+            className="flex items-center gap-2 px-6 py-3 rounded-lg bg-wc-gold hover:bg-yellow-300 text-wc-blue font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {isSubmitting ? (
+              <>
+                <span className="animate-spin">⏳</span>
+                Submitting...
+              </>
+            ) : (
+              <>
+                {currentStepIndex === steps.length - 1 ? 'Finish' : 'Next'}
+                <ChevronRight className="w-5 h-5" />
+              </>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Clear Progress Confirmation Modal */}
+      <AnimatePresence>
+        {showClearModal && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+              onClick={() => setShowClearModal(false)}
+            />
+
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md z-[101]"
+            >
+              <div className="glass-card border-2 border-red-500/30 mx-4">
+                {/* Header */}
+                <div className="flex items-start justify-between p-6 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center">
+                      <AlertTriangle className="w-6 h-6 text-red-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">Clear Progress?</h3>
+                      <p className="text-sm text-muted-foreground">This action cannot be undone</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowClearModal(false)}
+                    className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-6">
+                  <p className="text-muted-foreground">
+                    Are you sure you want to clear all your prediction progress? You will lose:
+                  </p>
+                  <ul className="mt-4 space-y-2 text-sm">
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                      All group stage standings
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                      Third place team selections
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                      All knockout round predictions
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 p-6 pt-0">
+                  <button
+                    onClick={() => setShowClearModal(false)}
+                    className="flex-1 px-4 py-3 rounded-lg bg-white/10 hover:bg-white/20 font-medium transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={confirmClearProgress}
+                    className="flex-1 px-4 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-bold transition-all"
+                  >
+                    Clear Progress
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
