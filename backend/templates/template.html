@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=3840" />
+    <title>World Cup 2026 — Prediction Bracket</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="bracket-tree-styles.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <div class="bg-overlay"></div>
+
+        <!-- HEADER -->
+        <header class="header">
+            <div class="header-left">
+                <h1 class="title">WORLD CUP 2026 — PREDICTION BRACKET</h1>
+                <p class="subtitle">Prédiction de <b>{{username}}</b> le <b>{{date}}</b></p>
+                <span class="onchain">🔗 On-chain proof: <b>{{proof_short}}</b></span>
+            </div>
+            <div class="header-right">
+                <div class="chip chain">⛓️ Blockchain Record</div>
+                <div class="chip id">NFT ID: <span>{{proof_short}}</span></div>
+            </div>
+        </header>
+
+        <!-- ═══════════════════════════════════════════════════════════════
+         BRACKET - TREE STRUCTURE
+         
+         The key is that each column's .pairs/.advancers container uses
+         justify-content: space-around, so items are automatically
+         centered vertically in the space of their "parent" matches.
+         
+         LEFT SIDE:  R32(8) → R16(4) → QF(2) → SF(1) → FINAL
+         RIGHT SIDE: FINAL ← SF(1) ← QF(2) ← R16(4) ← R32(8)
+         ═══════════════════════════════════════════════════════════════ -->
+        <div class="bracket">
+
+            <!-- ═══════════════════ R32 LEFT (8 pairs) ═══════════════════ -->
+            <div class="col col-r32 col-left">
+                <div class="round">Seizièmes</div>
+                <div class="pairs">
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_L1_a_flag}}"><span
+                                class="team">{{r32_L1_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_L1_b_flag}}"><span
+                                class="team">{{r32_L1_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_L2_a_flag}}"><span
+                                class="team">{{r32_L2_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_L2_b_flag}}"><span
+                                class="team">{{r32_L2_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_L3_a_flag}}"><span
+                                class="team">{{r32_L3_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_L3_b_flag}}"><span
+                                class="team">{{r32_L3_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_L4_a_flag}}"><span
+                                class="team">{{r32_L4_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_L4_b_flag}}"><span
+                                class="team">{{r32_L4_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_L5_a_flag}}"><span
+                                class="team">{{r32_L5_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_L5_b_flag}}"><span
+                                class="team">{{r32_L5_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_L6_a_flag}}"><span
+                                class="team">{{r32_L6_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_L6_b_flag}}"><span
+                                class="team">{{r32_L6_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_L7_a_flag}}"><span
+                                class="team">{{r32_L7_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_L7_b_flag}}"><span
+                                class="team">{{r32_L7_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_L8_a_flag}}"><span
+                                class="team">{{r32_L8_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_L8_b_flag}}"><span
+                                class="team">{{r32_L8_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════ R16 LEFT (4 pairs) ═══════════════════ 
+           Each pair is centered in front of 2 R32 pairs
+           ═══════════════════════════════════════════════════════════════ -->
+            <div class="col col-r16 col-left">
+                <div class="round">Huitièmes</div>
+                <div class="pairs">
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r16_L1_a_flag}}"><span
+                                class="team">{{r16_L1_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r16_L1_b_flag}}"><span
+                                class="team">{{r16_L1_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r16_L2_a_flag}}"><span
+                                class="team">{{r16_L2_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r16_L2_b_flag}}"><span
+                                class="team">{{r16_L2_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r16_L3_a_flag}}"><span
+                                class="team">{{r16_L3_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r16_L3_b_flag}}"><span
+                                class="team">{{r16_L3_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r16_L4_a_flag}}"><span
+                                class="team">{{r16_L4_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r16_L4_b_flag}}"><span
+                                class="team">{{r16_L4_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════ QF LEFT (2 pairs) ═══════════════════ 
+           Each pair is centered in front of 2 R16 pairs
+           ═══════════════════════════════════════════════════════════════ -->
+            <div class="col col-qf col-left">
+                <div class="round">Quarts</div>
+                <div class="pairs">
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{qf_L1_a_flag}}"><span
+                                class="team">{{qf_L1_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{qf_L1_b_flag}}"><span
+                                class="team">{{qf_L1_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{qf_L2_a_flag}}"><span
+                                class="team">{{qf_L2_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{qf_L2_b_flag}}"><span
+                                class="team">{{qf_L2_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════ SF LEFT (1 pair) ═══════════════════ 
+           This pair is centered in front of 2 QF pairs
+           ═══════════════════════════════════════════════════════════════ -->
+            <div class="col col-sf col-left">
+                <div class="round">Demi-finales</div>
+                <div class="pairs">
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{sf_L1_a_flag}}"><span
+                                class="team">{{sf_L1_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{sf_L1_b_flag}}"><span
+                                class="team">{{sf_L1_b_name}}</span></div>
+                        <div class="join left">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════ CENTER - FINAL ═══════════════════ -->
+            <div class="center">
+                <div class="round">Finale</div>
+
+                <div class="trophy-wrap">
+                    <img class="trophy-img" src="{{trophy_url}}" alt="World Cup Trophy">
+                </div>
+
+                <div class="final-panel">
+                    <div class="final-row">
+                        <div class="card final-card {{final_a_winner_class}}">
+                            <img class="flag" src="{{final_a_flag}}">
+                            <span class="team">{{final_a_name}}</span>
+                        </div>
+                        <span class="vs">VS</span>
+                        <div class="card final-card {{final_b_winner_class}}">
+                            <img class="flag" src="{{final_b_flag}}">
+                            <span class="team">{{final_b_name}}</span>
+                        </div>
+                    </div>
+
+                    <div class="winner">
+                        <span class="label">🏆 CHAMPION</span>
+                        <img class="winner-flag" src="{{winner_flag}}">
+                        <span class="winner-name">{{winner_name}}</span>
+                    </div>
+
+                    <div class="third">
+                        <span class="title3">Petite Finale</span>
+                        <div class="row">
+                            <div class="badge">
+                                <img class="flag" src="{{third_a_flag}}">
+                                <span class="name">{{third_a_name}}</span>
+                            </div>
+                            <span class="vs">VS</span>
+                            <div class="badge">
+                                <img class="flag" src="{{third_b_flag}}">
+                                <span class="name">{{third_b_name}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════ SF RIGHT (1 pair) ═══════════════════ -->
+            <div class="col col-sf col-right">
+                <div class="round">Demi-finales</div>
+                <div class="pairs">
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{sf_R1_a_flag}}"><span
+                                class="team">{{sf_R1_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{sf_R1_b_flag}}"><span
+                                class="team">{{sf_R1_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════ QF RIGHT (2 pairs) ═══════════════════ -->
+            <div class="col col-qf col-right">
+                <div class="round">Quarts</div>
+                <div class="pairs">
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{qf_R1_a_flag}}"><span
+                                class="team">{{qf_R1_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{qf_R1_b_flag}}"><span
+                                class="team">{{qf_R1_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{qf_R2_a_flag}}"><span
+                                class="team">{{qf_R2_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{qf_R2_b_flag}}"><span
+                                class="team">{{qf_R2_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════ R16 RIGHT (4 pairs) ═══════════════════ -->
+            <div class="col col-r16 col-right">
+                <div class="round">Huitièmes</div>
+                <div class="pairs">
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r16_R1_a_flag}}"><span
+                                class="team">{{r16_R1_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r16_R1_b_flag}}"><span
+                                class="team">{{r16_R1_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r16_R2_a_flag}}"><span
+                                class="team">{{r16_R2_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r16_R2_b_flag}}"><span
+                                class="team">{{r16_R2_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r16_R3_a_flag}}"><span
+                                class="team">{{r16_R3_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r16_R3_b_flag}}"><span
+                                class="team">{{r16_R3_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r16_R4_a_flag}}"><span
+                                class="team">{{r16_R4_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r16_R4_b_flag}}"><span
+                                class="team">{{r16_R4_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════ R32 RIGHT (8 pairs) ═══════════════════ -->
+            <div class="col col-r32 col-right">
+                <div class="round">Seizièmes</div>
+                <div class="pairs">
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_R1_a_flag}}"><span
+                                class="team">{{r32_R1_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_R1_b_flag}}"><span
+                                class="team">{{r32_R1_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_R2_a_flag}}"><span
+                                class="team">{{r32_R2_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_R2_b_flag}}"><span
+                                class="team">{{r32_R2_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_R3_a_flag}}"><span
+                                class="team">{{r32_R3_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_R3_b_flag}}"><span
+                                class="team">{{r32_R3_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_R4_a_flag}}"><span
+                                class="team">{{r32_R4_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_R4_b_flag}}"><span
+                                class="team">{{r32_R4_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_R5_a_flag}}"><span
+                                class="team">{{r32_R5_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_R5_b_flag}}"><span
+                                class="team">{{r32_R5_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_R6_a_flag}}"><span
+                                class="team">{{r32_R6_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_R6_b_flag}}"><span
+                                class="team">{{r32_R6_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_R7_a_flag}}"><span
+                                class="team">{{r32_R7_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_R7_b_flag}}"><span
+                                class="team">{{r32_R7_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                    <div class="pair">
+                        <div class="card"><img class="flag" src="{{r32_R8_a_flag}}"><span
+                                class="team">{{r32_R8_a_name}}</span></div>
+                        <div class="card"><img class="flag" src="{{r32_R8_b_flag}}"><span
+                                class="team">{{r32_R8_b_name}}</span></div>
+                        <div class="join right">
+                            <div class="h-top"></div>
+                            <div class="h-bot"></div>
+                            <div class="v"></div>
+                            <div class="h-out"></div>
+                            <div class="dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /bracket -->
+
+        <!-- FOOTER -->
+        <footer class="footer">
+            <div class="verify">
+                <img class="qr" src="{{qr_url}}" alt="QR code">
+                <div class="meta">
+                    <div>Verify URL: <b>{{verify_url}}</b></div>
+                    <div>Full proof: <b>{{proof}}</b></div>
+                </div>
+            </div>
+            <div class="meta meta-right">
+                <div>© {{year}} Bracket App — All rights reserved</div>
+                <div class="meta-chain">Hash: <b>{{proof_short}}</b></div>
+            </div>
+        </footer>
+
+    </div>
+</body>
+
+</html>

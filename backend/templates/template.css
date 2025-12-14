@@ -1,0 +1,784 @@
+/* ═══════════════════════════════════════════════════════════════════════════════
+   WORLD CUP 2026 — PREDICTION BRACKET
+   Tree Structure: Each child match is vertically centered IN FRONT OF its two parents
+   
+   Visual structure:
+   
+   [P1] ────┐
+            ├────● [Child]
+   [P2] ────┘
+   
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@page {
+    size: 3840px 2160px;
+    margin: 0;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   CSS VARIABLES
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+    /* ─── Card Dimensions ─── */
+    --card-w: 200px;
+    --card-h: 52px;
+    --card-gap: 8px;
+    --card-radius: 10px;
+
+    --flag-w: 36px;
+    --flag-h: 24px;
+
+    /* ─── Spacing ─── */
+    --col-gap: 50px;
+    --line-weight: 2px;
+
+    /* Pair height = 2 cards + gap between them */
+    --pair-h: calc(var(--card-h) * 2 + var(--card-gap));
+
+    /* 
+   * TREE SPACING CALCULATION
+   * Each round doubles the vertical space between pairs
+   * R32: base gap between pairs
+   * R16: pairs span 2 R32 pairs height
+   * QF: pairs span 2 R16 pairs height (= 4 R32 pairs)
+   * SF: pairs span 2 QF pairs height (= 8 R32 pairs)
+   */
+    --r32-pair-gap: 14px;
+
+    /* ─── Colors ─── */
+    --bg-base: #020617;
+    --bg-card: rgba(15, 23, 42, 0.92);
+    --bg-card-winner: rgba(250, 204, 21, 0.1);
+
+    --border-card: rgba(148, 163, 184, 0.35);
+    --border-winner: rgba(250, 204, 21, 0.6);
+
+    --text-primary: #F8FAFC;
+    --text-secondary: #CBD5E1;
+    --text-muted: #64748B;
+
+    --accent-blue: rgba(56, 189, 248, 0.9);
+    --accent-blue-glow: rgba(56, 189, 248, 0.4);
+    --accent-gold: #FACC15;
+    --accent-teal: #2DD4BF;
+
+    --line-color: var(--accent-blue);
+    --dot-size: 10px;
+
+    --font-main: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+html,
+body {
+    font-family: var(--font-main);
+    background: var(--bg-base);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   WRAPPER & BACKGROUND
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.wrap {
+    position: relative;
+    width: 3840px;
+    height: 2160px;
+    padding: 50px 60px 40px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.bg-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(ellipse 1400px 1000px at 10% 0%, rgba(59, 130, 246, 0.18), transparent 60%),
+        radial-gradient(ellipse 1400px 1000px at 90% 0%, rgba(16, 185, 129, 0.15), transparent 60%),
+        radial-gradient(ellipse 1800px 900px at 50% 100%, rgba(250, 204, 21, 0.12), transparent 65%),
+        radial-gradient(ellipse 1000px 600px at 50% 50%, rgba(56, 189, 248, 0.04), transparent 50%),
+        var(--bg-base);
+}
+
+.bg-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+        linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+    background-size: 60px 60px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 25px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    flex-shrink: 0;
+}
+
+.header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 280px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent-blue), transparent);
+}
+
+.title {
+    font-size: 56px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
+}
+
+.subtitle {
+    margin-top: 8px;
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.subtitle b {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.onchain {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 6px 14px;
+    background: rgba(45, 212, 191, 0.1);
+    border: 1px solid rgba(45, 212, 191, 0.25);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--accent-teal);
+}
+
+.onchain b {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-weight: 500;
+}
+
+.header-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-end;
+}
+
+.chip {
+    padding: 10px 18px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 600;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.chip.chain {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.35);
+    color: var(--accent-blue);
+}
+
+.chip.id span {
+    font-family: 'Monaco', monospace;
+    color: var(--text-primary);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   BRACKET - TREE STRUCTURE
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.bracket {
+    position: relative;
+    z-index: 5;
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    gap: var(--col-gap);
+}
+
+/* Each column */
+.col {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Round label */
+.round {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 8px 14px;
+    margin-bottom: 15px;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   TEAM CARDS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: var(--card-w);
+    height: var(--card-h);
+    padding: 0 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: var(--card-radius);
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.card:hover {
+    border-color: rgba(148, 163, 184, 0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.25);
+}
+
+.card.winner {
+    background: var(--bg-card-winner);
+    border-color: var(--border-winner);
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.12);
+}
+
+.flag {
+    width: var(--flag-w);
+    height: var(--flag-h);
+    border-radius: 4px;
+    object-fit: cover;
+    background: #fff;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.team {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card.winner .team {
+    color: var(--accent-gold);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   PAIRS CONTAINER
+   Uses flexbox with space-between to distribute pairs evenly
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.pairs {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   PAIR - Two cards stacked
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.pair {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--card-gap);
+    /* Pair takes minimum space needed */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   CONNECTORS
+   
+   Structure for LEFT side:
+   ┌──────────┐
+   │  Card 1  │─────┐
+   └──────────┘     │
+                    ├─────●
+   ┌──────────┐     │
+   │  Card 2  │─────┘
+   └──────────┘
+   
+   - h-top: horizontal line from card 1
+   - h-bot: horizontal line from card 2
+   - v: vertical line connecting h-top and h-bot
+   - h-out: horizontal line going to the dot/next round
+   - dot: connection point
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.join {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--col-gap);
+    pointer-events: none;
+}
+
+/* LEFT side - connector goes to the RIGHT of the pair */
+.join.left {
+    left: 100%;
+}
+
+/* RIGHT side - connector goes to the LEFT of the pair */
+.join.right {
+    right: 100%;
+}
+
+/* Horizontal lines from cards */
+.join .h-top,
+.join .h-bot {
+    position: absolute;
+    height: var(--line-weight);
+    width: calc(var(--col-gap) * 0.4);
+    background: var(--line-color);
+    box-shadow: 0 0 8px var(--accent-blue-glow);
+}
+
+/* LEFT side: lines start from left edge */
+.join.left .h-top,
+.join.left .h-bot {
+    left: 0;
+}
+
+/* RIGHT side: lines start from right edge */
+.join.right .h-top,
+.join.right .h-bot {
+    right: 0;
+}
+
+/* Position of top horizontal - at center of first card */
+.join .h-top {
+    top: calc(var(--card-h) / 2 - var(--line-weight) / 2);
+}
+
+/* Position of bottom horizontal - at center of second card */
+.join .h-bot {
+    top: calc(var(--card-h) + var(--card-gap) + var(--card-h) / 2 - var(--line-weight) / 2);
+}
+
+/* Vertical line connecting top and bottom horizontals */
+.join .v {
+    position: absolute;
+    width: var(--line-weight);
+    background: var(--line-color);
+    box-shadow: 0 0 8px var(--accent-blue-glow);
+    /* From center of card 1 to center of card 2 */
+    top: calc(var(--card-h) / 2);
+    height: calc(var(--card-h) + var(--card-gap));
+}
+
+.join.left .v {
+    left: calc(var(--col-gap) * 0.4 - var(--line-weight) / 2);
+}
+
+.join.right .v {
+    right: calc(var(--col-gap) * 0.4 - var(--line-weight) / 2);
+}
+
+/* Horizontal line going out to the next round */
+.join .h-out {
+    position: absolute;
+    height: var(--line-weight);
+    width: calc(var(--col-gap) * 0.6 + var(--line-weight));
+    background: var(--line-color);
+    box-shadow: 0 0 8px var(--accent-blue-glow);
+    /* Vertically centered in the pair */
+    top: calc(var(--card-h) + var(--card-gap) / 2 - var(--line-weight) / 2);
+}
+
+.join.left .h-out {
+    left: calc(var(--col-gap) * 0.4 - var(--line-weight));
+}
+
+.join.right .h-out {
+    right: calc(var(--col-gap) * 0.4 - var(--line-weight));
+}
+
+/* Connection dot */
+.join .dot {
+    position: absolute;
+    width: var(--dot-size);
+    height: var(--dot-size);
+    background: var(--line-color);
+    border-radius: 50%;
+    /* Centered vertically in pair */
+    top: calc(var(--card-h) + var(--card-gap) / 2 - var(--dot-size) / 2);
+    box-shadow:
+        0 0 10px var(--line-color),
+        0 0 20px var(--accent-blue-glow);
+    animation: dot-pulse 2s ease-in-out infinite;
+}
+
+.join.left .dot {
+    right: calc(-1 * var(--dot-size) / 2);
+}
+
+.join.right .dot {
+    left: calc(-1 * var(--dot-size) / 2);
+}
+
+@keyframes dot-pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.2);
+        opacity: 0.85;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SINGLE ADVANCERS (cards that advanced, shown between rounds)
+   These appear in FRONT of their two parent matches
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.advancers {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+.advancer {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Back-line: connects from the previous round's dot to this card */
+.back-line {
+    position: absolute;
+    height: var(--line-weight);
+    width: calc(var(--col-gap) * 0.5);
+    background: var(--line-color);
+    box-shadow: 0 0 8px var(--accent-blue-glow);
+    top: calc(50% - var(--line-weight) / 2);
+}
+
+.back-line.left {
+    right: 100%;
+}
+
+.back-line.right {
+    left: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   CENTER - FINAL
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 380px;
+    padding: 0 20px;
+}
+
+.center .round {
+    font-size: 14px;
+    padding: 10px 28px;
+    background: linear-gradient(135deg, rgba(250, 204, 21, 0.12) 0%, rgba(250, 204, 21, 0.04) 100%);
+    border: 1px solid rgba(250, 204, 21, 0.35);
+    color: var(--accent-gold);
+    margin-bottom: 25px;
+}
+
+.trophy-wrap {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.trophy-img {
+    width: 160px;
+    height: auto;
+    filter: drop-shadow(0 0 35px rgba(250, 204, 21, 0.35));
+}
+
+.trophy-wrap::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 260px;
+    height: 260px;
+    background: radial-gradient(circle, rgba(250, 204, 21, 0.12) 0%, transparent 65%);
+    pointer-events: none;
+}
+
+.final-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 30px 40px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(250, 204, 21, 0.35);
+    border-radius: 20px;
+    backdrop-filter: blur(15px);
+    box-shadow:
+        0 0 50px rgba(250, 204, 21, 0.15),
+        0 20px 40px rgba(0, 0, 0, 0.35);
+    animation: panel-glow 4s ease-in-out infinite;
+}
+
+@keyframes panel-glow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 40px rgba(250, 204, 21, 0.12), 0 20px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    50% {
+        box-shadow: 0 0 60px rgba(250, 204, 21, 0.2), 0 20px 40px rgba(0, 0, 0, 0.35);
+    }
+}
+
+.final-row {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.final-card {
+    min-width: 220px;
+}
+
+.vs {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 3px;
+    color: var(--text-muted);
+}
+
+/* Champion */
+.winner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 22px 35px;
+    background: linear-gradient(135deg, rgba(250, 204, 21, 0.1) 0%, rgba(250, 204, 21, 0.03) 100%);
+    border: 2px solid var(--accent-gold);
+    border-radius: 14px;
+}
+
+.winner .label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: var(--accent-gold);
+}
+
+.winner-flag {
+    width: 70px;
+    height: 48px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.25), 0 0 30px rgba(250, 204, 21, 0.15);
+}
+
+.winner-name {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    color: var(--accent-gold);
+}
+
+/* Third place */
+.third {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 25px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 12px;
+}
+
+.title3 {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+}
+
+.third .row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 8px;
+}
+
+.badge .flag {
+    width: 28px;
+    height: 19px;
+}
+
+.badge .name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.third .vs {
+    font-size: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.footer {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-top: 25px;
+    margin-top: 30px;
+    border-top: 1px solid rgba(148, 163, 184, 0.12);
+    flex-shrink: 0;
+}
+
+.verify {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.qr {
+    width: 90px;
+    height: 90px;
+    padding: 6px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.25);
+}
+
+.meta {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.meta b {
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.meta-right {
+    text-align: right;
+}
+
+.meta-chain {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 5px 10px;
+    background: rgba(45, 212, 191, 0.08);
+    border: 1px solid rgba(45, 212, 191, 0.2);
+    border-radius: 5px;
+    color: var(--accent-teal);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   COLUMN WIDTH ADJUSTMENTS
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+.col-r32 {
+    width: calc(var(--card-w) + var(--col-gap));
+}
+
+.col-r16 {
+    width: calc(var(--card-w) + var(--col-gap));
+}
+
+.col-qf {
+    width: calc(var(--card-w) + var(--col-gap));
+}
+
+.col-sf {
+    width: calc(var(--card-w) + var(--col-gap));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   RESPONSIVE SCALING
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1920px) {
+    .wrap {
+        transform: scale(0.5);
+        transform-origin: top left;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   PRINT
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+@media print {
+    .wrap {
+        background: var(--bg-base) !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}
