@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     make \
     g++ \
     && rm -rf /var/lib/apt/lists/*
-RUN --mount=type=cache,id=npm,target=/root/.npm npm ci --only=production
+RUN npm ci --only=production
 
 # Development image
 FROM base AS development
@@ -44,7 +44,7 @@ ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 COPY package*.json ./
-RUN --mount=type=cache,id=npm-dev,target=/root/.npm npm ci
+RUN npm ci
 
 # Copy Prisma schema FIRST, then generate
 COPY prisma ./prisma
@@ -65,7 +65,7 @@ RUN apt-get update && apt-get install -y \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 COPY prisma ./prisma
-RUN --mount=type=cache,id=npm-build,target=/root/.npm npm ci
+RUN npm ci
 RUN npx prisma generate
 COPY . .
 RUN npm run build
