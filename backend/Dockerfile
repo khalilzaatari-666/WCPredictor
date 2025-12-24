@@ -9,6 +9,13 @@ RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
+    pkg-config \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev \
+    libpixman-1-dev \
     && rm -rf /var/lib/apt/lists/*
 RUN npm ci --only=production
 
@@ -19,6 +26,7 @@ RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
+    pkg-config \
     chromium \
     chromium-sandbox \
     fonts-liberation \
@@ -37,6 +45,12 @@ RUN apt-get update && apt-get install -y \
     libxrandr2 \
     xdg-utils \
     ca-certificates \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev \
+    libpixman-1-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Tell Puppeteer to use installed Chromium
@@ -63,6 +77,13 @@ RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
+    pkg-config \
+    libcairo2-dev \
+    libpango1.0-dev \
+    libjpeg-dev \
+    libgif-dev \
+    librsvg2-dev \
+    libpixman-1-dev \
     && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
@@ -100,6 +121,13 @@ RUN apt-get update && apt-get install -y \
     libxrandr2 \
     xdg-utils \
     ca-certificates \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libjpeg62-turbo \
+    libgif7 \
+    librsvg2-2 \
+    libpixman-1-0 \
     && rm -rf /var/lib/apt/lists/*
 
 # Tell Puppeteer to use installed Chromium
