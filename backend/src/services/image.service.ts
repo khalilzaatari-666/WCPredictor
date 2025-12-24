@@ -20,10 +20,10 @@ export async function generateBracketImage(
   prediction: any,
   username: string,
   predictionId: string,
-  blockchainData: {
-    tokenId: number;
-    nftHash: string;
-    transactionHash: string;
+  blockchainData?: {
+    tokenId: number | null;
+    nftHash: string | null;
+    transactionHash: string | null;
   }
 ): Promise<{ imageBuffer: Buffer; thumbnailBuffer: Buffer }> {
   try {

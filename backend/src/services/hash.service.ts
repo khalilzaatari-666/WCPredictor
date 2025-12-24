@@ -7,14 +7,14 @@ import logger from '../utils/logger';
 export interface PredictionData {
   groupStandings: Record<string, any>;
   thirdPlaceTeams: any;
-  roundOf32: Record<string, any>;
-  roundOf16: Record<string, any>;
-  quarterFinals: Record<string, any>;
-  semiFinals: Record<string, any>;
-  final: Record<string, any>;
-  thirdPlace: Record<string, any>;
-  champion: string;
-  runnerUp: string;
+  roundOf32?: any;
+  roundOf16?: any;
+  quarterFinals?: any;
+  semiFinals?: any;
+  final?: any;
+  thirdPlace?: any;
+  champion?: string;
+  runnerUp?: string;
 }
 
 /**
