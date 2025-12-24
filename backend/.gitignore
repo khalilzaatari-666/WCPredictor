@@ -43,6 +43,3 @@ Thumbs.db
 
 # Uploads
 uploads/
-
-# Prisma
-prisma/migrations/
