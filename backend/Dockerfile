@@ -19,11 +19,40 @@ RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
+    chromium \
+    chromium-sandbox \
+    fonts-liberation \
+    libnss3 \
+    libxss1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdrm2 \
+    libgbm1 \
+    libgtk-3-0 \
+    libnspr4 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    xdg-utils \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Tell Puppeteer to use installed Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
 COPY package*.json ./
 RUN --mount=type=cache,target=/root/.npm npm ci
-COPY . .
+
+# Copy Prisma schema FIRST, then generate
+COPY prisma ./prisma
 RUN npx prisma generate
+
+# Copy the rest of the application
+COPY . .
+
 EXPOSE 4000
 CMD ["npm", "run", "dev"]
 
@@ -52,7 +81,29 @@ RUN adduser --system --uid 1001 nodeapp
 
 RUN apt-get update && apt-get install -y \
     python3 \
+    chromium \
+    chromium-sandbox \
+    fonts-liberation \
+    libnss3 \
+    libxss1 \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libcups2 \
+    libdrm2 \
+    libgbm1 \
+    libgtk-3-0 \
+    libnspr4 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    xdg-utils \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
+# Tell Puppeteer to use installed Chromium
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist

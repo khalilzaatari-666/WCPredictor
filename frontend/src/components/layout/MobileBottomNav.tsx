@@ -49,14 +49,17 @@ export default function MobileBottomNav() {
               <Link key={item.href} href={item.href}>
                 <motion.div
                   whileTap={{ scale: 0.9 }}
+                  whileHover={{ scale: 1.05 }}
                   className="relative -top-6"
                 >
                   <div className={`
-                    w-14 h-14 rounded-full flex items-center justify-center shadow-lg
-                    gradient-gold text-black
-                    border-4 border-background
+                    w-14 h-14 rounded-full flex items-center justify-center
+                    gradient-primary
+                    glass border border-white/20
+                    shadow-glow-primary
+                    transition-all duration-300
                   `}>
-                    <Plus className="w-8 h-8" strokeWidth={3} />
+                    <Plus className="w-7 h-7 text-white" strokeWidth={2.5} />
                   </div>
                 </motion.div>
               </Link>

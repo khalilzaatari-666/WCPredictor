@@ -2,10 +2,16 @@
 node_modules/
 .pnp
 .pnp.js
+artifacts/
+cache/  
+contracts/
+typechain-types/
 
 # Testing
 coverage/
 *.test.ts.snap
+test/
+scripts/
 
 # Production
 dist/

@@ -6,36 +6,41 @@ import logger from '../utils/logger';
 
 const UPLOAD_DIR = path.join(__dirname, '../../uploads');
 const PREDICTIONS_DIR = path.join(UPLOAD_DIR, 'predictions');
+const PREVIEW_DIR = path.join(UPLOAD_DIR, 'previews');
 
 /**
- * Generate bracket image and thumbnail using Puppeteer
+ * Generate bracket image and thumbnail using Puppeteer (POST-PAYMENT)
  * @param prediction - The prediction data
  * @param username - The username of the predictor
  * @param predictionId - The unique prediction ID
- * @returns Object containing full image buffer and blurred thumbnail buffer
+ * @param blockchainData - Blockchain/NFT data from minting
+ * @returns Object containing full image buffer and thumbnail buffer
  */
 export async function generateBracketImage(
   prediction: any,
   username: string,
-  predictionId: string
-): Promise<{ imageBuffer: Buffer; thumbnailBuffer: Buffer; blurredThumbnail: Buffer }> {
+  predictionId: string,
+  blockchainData: {
+    tokenId: number;
+    nftHash: string;
+    transactionHash: string;
+  }
+): Promise<{ imageBuffer: Buffer; thumbnailBuffer: Buffer }> {
   try {
     // Ensure upload directories exist
     await fs.mkdir(PREDICTIONS_DIR, { recursive: true });
 
-    // Generate full image and regular thumbnail using Puppeteer
+    // Generate full image with blockchain data (post-payment)
     const { imageBuffer, thumbnailBuffer } = await puppeteerService.generateBracketImage(
       prediction,
       username,
-      predictionId
+      predictionId,
+      blockchainData
     );
 
-    // Generate blurred miniature for payment page
-    const blurredThumbnail = await generateBlurredThumbnail(thumbnailBuffer);
+    logger.info(`Generated bracket image with blockchain data for prediction: ${predictionId}`);
 
-    logger.info(`Generated bracket image and thumbnails for prediction: ${predictionId}`);
-
-    return { imageBuffer, thumbnailBuffer, blurredThumbnail };
+    return { imageBuffer, thumbnailBuffer };
   } catch (error) {
     logger.error('Error generating bracket image:', error);
     throw new Error('Failed to generate bracket image');
@@ -43,24 +48,41 @@ export async function generateBracketImage(
 }
 
 /**
- * Generate a blurred thumbnail for the payment page preview
- * @param thumbnailBuffer - The original thumbnail buffer
- * @returns Blurred thumbnail buffer
+ * Generate a blurred preview image for payment page (before payment is confirmed)
+ * Shows the full bracket with prediction data, but blurred and without blockchain data
+ * @param prediction - The prediction data
+ * @param username - The username of the predictor
+ * @returns Blurred preview buffer
  */
-async function generateBlurredThumbnail(thumbnailBuffer: Buffer): Promise<Buffer> {
+export async function generateBlurredPreview(
+  prediction: any,
+  username: string
+): Promise<Buffer> {
   try {
-    // Apply blur and reduce size for payment page preview
-    const blurred = await sharp(thumbnailBuffer)
-      .resize(320, 180, { fit: 'cover' }) // Smaller miniature size
-      .blur(15) // Strong blur effect
+    await fs.mkdir(PREVIEW_DIR, { recursive: true });
+
+    // Generate full bracket WITHOUT blockchain data (payment not confirmed yet)
+    const { thumbnailBuffer } = await puppeteerService.generateBracketImage(
+      prediction,
+      username,
+      'preview-temp-id',
+      undefined // No blockchain data yet
+    );
+
+    // Apply light blur for preview
+    const blurredPreview = await sharp(thumbnailBuffer)
+      .blur(3)
+      .modulate({ brightness: 0.9 })
       .toBuffer();
 
-    return blurred;
+    logger.info('Generated blurred preview with prediction data');
+    return blurredPreview;
   } catch (error) {
-    logger.error('Error generating blurred thumbnail:', error);
-    throw new Error('Failed to generate blurred thumbnail');
+    logger.error('Error generating blurred preview:', error);
+    throw new Error('Failed to generate blurred preview');
   }
 }
+
 
 /**
  * Save the full prediction image to permanent storage
@@ -215,7 +237,8 @@ export async function deletePredictionImages(predictionId: string): Promise<void
 export async function saveImage(buffer: Buffer, filename: string): Promise<string> {
   const filepath = path.join(UPLOAD_DIR, filename);
   await fs.writeFile(filepath, buffer);
-  return `/uploads/${filename}`;
+  const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
+  return `${backendUrl}/uploads/${filename}`;
 }
 
 /**

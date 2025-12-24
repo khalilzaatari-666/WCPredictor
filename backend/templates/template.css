@@ -222,6 +222,7 @@ body {
     display: flex;
     align-items: stretch;
     gap: var(--col-gap);
+    justify-content: center;
 }
 
 /* Each column */
@@ -371,13 +372,13 @@ body {
     box-shadow: 0 0 8px var(--accent-blue-glow);
 }
 
-/* LEFT side: lines start from left edge */
+/* LEFT side: lines start from left edge (after the card) */
 .join.left .h-top,
 .join.left .h-bot {
     left: 0;
 }
 
-/* RIGHT side: lines start from right edge */
+/* RIGHT side: lines start from right edge (after the card) */
 .join.right .h-top,
 .join.right .h-bot {
     right: 0;
@@ -412,11 +413,11 @@ body {
     right: calc(var(--col-gap) * 0.4 - var(--line-weight) / 2);
 }
 
-/* Horizontal line going out to the next round */
+/* Horizontal line going out to the next round - reaches card center */
 .join .h-out {
     position: absolute;
     height: var(--line-weight);
-    width: calc(var(--col-gap) * 0.6 + var(--line-weight));
+    width: calc(var(--col-gap) * 0.6 + var(--card-w) / 2);
     background: var(--line-color);
     box-shadow: 0 0 8px var(--accent-blue-glow);
     /* Vertically centered in the pair */
@@ -424,11 +425,11 @@ body {
 }
 
 .join.left .h-out {
-    left: calc(var(--col-gap) * 0.4 - var(--line-weight));
+    left: calc(var(--col-gap) * 0.4);
 }
 
 .join.right .h-out {
-    right: calc(var(--col-gap) * 0.4 - var(--line-weight));
+    right: calc(var(--col-gap) * 0.4);
 }
 
 /* Connection dot */
@@ -438,20 +439,87 @@ body {
     height: var(--dot-size);
     background: var(--line-color);
     border-radius: 50%;
-    /* Centered vertically in pair */
     top: calc(var(--card-h) + var(--card-gap) / 2 - var(--dot-size) / 2);
     box-shadow:
         0 0 10px var(--line-color),
         0 0 20px var(--accent-blue-glow);
     animation: dot-pulse 2s ease-in-out infinite;
+    z-index: 2;
 }
 
 .join.left .dot {
-    right: calc(-1 * var(--dot-size) / 2);
+    left: calc(var(--col-gap) + var(--card-w) / 2 - var(--dot-size) / 2);
 }
 
 .join.right .dot {
-    left: calc(-1 * var(--dot-size) / 2);
+    right: calc(var(--col-gap) + var(--card-w) / 2 - var(--dot-size) / 2);
+}
+
+/* Vertical connector from dot to next round's card */
+.join .v-next {
+    position: absolute;
+    width: var(--line-weight);
+    background: var(--line-color);
+    box-shadow: 0 0 8px var(--accent-blue-glow);
+    /* Start from dot position */
+    top: calc(var(--card-h) + var(--card-gap) / 2);
+}
+
+.join.left .v-next {
+    left: calc(var(--col-gap) + var(--card-w) / 2 - var(--line-weight) / 2);
+}
+
+.join.right .v-next {
+    right: calc(var(--col-gap) + var(--card-w) / 2 - var(--line-weight) / 2);
+}
+
+/* Odd pairs (1st, 3rd, 5th, 7th) connect DOWNWARD to next round */
+.pair:nth-child(odd) .v-next {
+    height: 50px; /* Default */
+}
+
+/* Even pairs (2nd, 4th, 6th, 8th) connect UPWARD to next round */
+.pair:nth-child(even) .v-next {
+    height: 50px; /* Default */
+    transform: translateY(-100%);
+}
+
+/* Round-specific heights */
+.col-r32 .pair:nth-child(odd) .v-next,
+.col-r32 .pair:nth-child(even) .v-next {
+    height: 60px;
+}
+
+.col-r16 .pair:nth-child(odd) .v-next,
+.col-r16 .pair:nth-child(even) .v-next {
+    height: 160px;
+}
+
+.col-qf .pair:nth-child(odd) .v-next,
+.col-qf .pair:nth-child(even) .v-next {
+    height: 360px;
+}
+
+.col-sf .pair:nth-child(odd) .v-next,
+.col-sf .pair:nth-child(even) .v-next {
+    height: 550px;
+}
+
+/* Semi-finals should not extend into the center box */
+.col-sf .pair .v-next {
+    display: none;
+}
+
+.col-sf .pair .h-out {
+    width: calc(var(--col-gap) * 0.6);
+}
+
+.col-sf .join.left .dot {
+    left: calc(var(--col-gap) - var(--dot-size) / 2);
+}
+
+.col-sf .join.right .dot {
+    right: calc(var(--col-gap) - var(--dot-size) / 2);
 }
 
 @keyframes dot-pulse {
@@ -585,6 +653,19 @@ body {
 
 .final-card {
     min-width: 220px;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px;
+}
+
+.final-card .flag {
+    flex-shrink: 0;
+}
+
+.final-card .team {
+    flex-shrink: 0;
 }
 
 .vs {
@@ -599,15 +680,15 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    padding: 22px 35px;
+    gap: 14px;
+    padding: 24px 40px;
     background: linear-gradient(135deg, rgba(250, 204, 21, 0.1) 0%, rgba(250, 204, 21, 0.03) 100%);
     border: 2px solid var(--accent-gold);
     border-radius: 14px;
 }
 
 .winner .label {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 3px;
@@ -615,18 +696,20 @@ body {
 }
 
 .winner-flag {
-    width: 70px;
-    height: 48px;
+    width: 80px;
+    height: 54px;
     border-radius: 8px;
     object-fit: cover;
+    background: #fff;
     box-shadow: 0 6px 25px rgba(0, 0, 0, 0.25), 0 0 30px rgba(250, 204, 21, 0.15);
 }
 
 .winner-name {
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 900;
     letter-spacing: 1px;
     color: var(--accent-gold);
+    margin-top: -2px;
 }
 
 /* Third place */
@@ -745,19 +828,19 @@ body {
    ═══════════════════════════════════════════════════════════════════════════════ */
 
 .col-r32 {
-    width: calc(var(--card-w) + var(--col-gap));
+    width: var(--card-w);
 }
 
 .col-r16 {
-    width: calc(var(--card-w) + var(--col-gap));
+    width: var(--card-w);
 }
 
 .col-qf {
-    width: calc(var(--card-w) + var(--col-gap));
+    width: var(--card-w);
 }
 
 .col-sf {
-    width: calc(var(--card-w) + var(--col-gap));
+    width: var(--card-w);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════

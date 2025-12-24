@@ -7,10 +7,7 @@ import {
   Plus,
   Calendar,
   TrendingUp,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Filter,
+  Trophy,
   Search,
 } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -18,22 +15,16 @@ import { api } from '@/lib/api';
 interface Prediction {
   id: string;
   predictionId: string;
-  homeTeam: string;
-  awayTeam: string;
-  predictedHomeScore: number;
-  predictedAwayScore: number;
-  actualHomeScore?: number;
-  actualAwayScore?: number;
-  matchDate: string;
-  status: 'pending' | 'correct' | 'incorrect';
-  score: number;
+  champion: string;
+  runnerUp: string;
+  isPaid: boolean;
+  imageUrl?: string;
   createdAt: string;
 }
 
 export default function PredictionsPage() {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'pending' | 'correct' | 'incorrect'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -53,21 +44,17 @@ export default function PredictionsPage() {
   };
 
   const filteredPredictions = predictions.filter((pred) => {
-    const matchesFilter = filter === 'all' || pred.status === filter;
-    const matchesSearch =
-      pred.homeTeam.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pred.awayTeam.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFilter && matchesSearch;
+    if (!searchQuery) return true;
+    return (
+      pred.champion?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pred.runnerUp?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pred.predictionId.toLowerCase().includes(searchQuery.toLowerCase())
+    );
   });
 
   const stats = {
     total: predictions.length,
-    correct: predictions.filter((p) => p.status === 'correct').length,
-    incorrect: predictions.filter((p) => p.status === 'incorrect').length,
-    pending: predictions.filter((p) => p.status === 'pending').length,
   };
-
-  const accuracy = stats.total > 0 ? ((stats.correct / (stats.correct + stats.incorrect)) * 100).toFixed(1) : 0;
 
   if (loading) {
     return (
@@ -96,6 +83,7 @@ export default function PredictionsPage() {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
+          onClick={() => window.location.href = '/dashboard/predict'}
           className="btn-primary flex items-center gap-2"
         >
           <Plus className="w-5 h-5" />
@@ -104,13 +92,13 @@ export default function PredictionsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="glass-card"
         >
-          <div className="text-sm text-muted-foreground mb-1">Total</div>
+          <div className="text-sm text-muted-foreground mb-1">Total Brackets</div>
           <div className="text-3xl font-bold">{stats.total}</div>
         </motion.div>
         <motion.div
@@ -119,8 +107,12 @@ export default function PredictionsPage() {
           transition={{ delay: 0.1 }}
           className="glass-card"
         >
-          <div className="text-sm text-muted-foreground mb-1">Correct</div>
-          <div className="text-3xl font-bold text-green-500">{stats.correct}</div>
+          <div className="text-sm text-muted-foreground mb-1">Latest</div>
+          <div className="text-xl font-bold text-wc-gold">
+            {predictions.length > 0
+              ? new Date(predictions[0].createdAt).toLocaleDateString()
+              : '-'}
+          </div>
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -128,48 +120,24 @@ export default function PredictionsPage() {
           transition={{ delay: 0.2 }}
           className="glass-card"
         >
-          <div className="text-sm text-muted-foreground mb-1">Pending</div>
-          <div className="text-3xl font-bold text-yellow-500">{stats.pending}</div>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="glass-card"
-        >
-          <div className="text-sm text-muted-foreground mb-1">Accuracy</div>
-          <div className="text-3xl font-bold text-wc-primary">{accuracy}%</div>
+          <div className="text-sm text-muted-foreground mb-1">Most Picked Champion</div>
+          <div className="text-xl font-bold text-wc-primary">
+            {predictions.length > 0 ? predictions[0].champion : '-'}
+          </div>
         </motion.div>
       </div>
 
-      {/* Filters & Search */}
+      {/* Search */}
       <div className="glass-card">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search teams..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-field pl-10"
-            />
-          </div>
-          <div className="flex gap-2">
-            {(['all', 'pending', 'correct', 'incorrect'] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`px-4 py-2 rounded-lg transition-all ${
-                  filter === f
-                    ? 'bg-wc-primary text-white'
-                    : 'glass hover:bg-white/5'
-                }`}
-              >
-                {f.charAt(0).toUpperCase() + f.slice(1)}
-              </button>
-            ))}
-          </div>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search by champion, runner-up, or prediction ID..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="input-field pl-10 w-full"
+          />
         </div>
       </div>
 
@@ -186,7 +154,10 @@ export default function PredictionsPage() {
             <p className="text-muted-foreground mb-6">
               Start making predictions to see them here!
             </p>
-            <button className="btn-primary inline-flex items-center gap-2">
+            <button
+              onClick={() => window.location.href = '/dashboard/predict'}
+              className="btn-primary inline-flex items-center gap-2"
+            >
               <Plus className="w-5 h-5" />
               Make Your First Prediction
             </button>
@@ -200,59 +171,52 @@ export default function PredictionsPage() {
               transition={{ delay: index * 0.05 }}
               whileHover={{ scale: 1.02 }}
               className="glass-card cursor-pointer group"
+              onClick={() => window.location.href = `/dashboard/predictions/${prediction.predictionId}`}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4 flex-1">
-                  {/* Status Icon */}
-                  <div>
-                    {prediction.status === 'correct' && (
-                      <div className="p-2 rounded-full bg-green-500/20">
-                        <CheckCircle className="w-6 h-6 text-green-500" />
-                      </div>
-                    )}
-                    {prediction.status === 'incorrect' && (
-                      <div className="p-2 rounded-full bg-red-500/20">
-                        <XCircle className="w-6 h-6 text-red-500" />
-                      </div>
-                    )}
-                    {prediction.status === 'pending' && (
-                      <div className="p-2 rounded-full bg-yellow-500/20">
-                        <Clock className="w-6 h-6 text-yellow-500" />
-                      </div>
-                    )}
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                {/* Bracket Preview */}
+                {prediction.imageUrl && (
+                  <div className="w-full md:w-32 h-20 rounded-lg overflow-hidden border border-white/20 flex-shrink-0">
+                    <img
+                      src={prediction.imageUrl}
+                      alt="Bracket preview"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
+                )}
 
-                  {/* Match Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-4 mb-2">
-                      <span className="font-bold">{prediction.homeTeam}</span>
-                      <span className="text-2xl font-bold text-wc-primary">
-                        {prediction.predictedHomeScore} - {prediction.predictedAwayScore}
-                      </span>
-                      <span className="font-bold">{prediction.awayTeam}</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        {new Date(prediction.matchDate).toLocaleDateString()}
-                      </span>
-                      {prediction.actualHomeScore !== undefined && (
-                        <span>
-                          Actual: {prediction.actualHomeScore} - {prediction.actualAwayScore}
-                        </span>
-                      )}
+                {/* Prediction Info */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-sm font-mono text-wc-gold">
+                      {prediction.predictionId}
+                    </span>
+                    <span className="px-2 py-1 rounded bg-green-500/20 text-green-500 text-xs font-medium">
+                      Paid
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <Trophy className="w-5 h-5 text-wc-gold flex-shrink-0" />
+                    <div>
+                      <span className="text-sm text-muted-foreground">Champion: </span>
+                      <span className="font-bold text-wc-gold">{prediction.champion}</span>
                     </div>
                   </div>
-
-                  {/* Score */}
-                  {prediction.score > 0 && (
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-wc-gold">
-                        +{prediction.score}
-                      </div>
-                      <div className="text-xs text-muted-foreground">points</div>
+                  <div className="flex items-center gap-3">
+                    <TrendingUp className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                    <div>
+                      <span className="text-sm text-muted-foreground">Runner-up: </span>
+                      <span className="font-bold text-gray-300">{prediction.runnerUp}</span>
                     </div>
-                  )}
+                  </div>
+                </div>
+
+                {/* Date */}
+                <div className="text-right">
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Calendar className="w-4 h-4" />
+                    {new Date(prediction.createdAt).toLocaleDateString()}
+                  </div>
                 </div>
               </div>
             </motion.div>

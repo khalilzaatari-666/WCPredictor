@@ -4,15 +4,51 @@ import { generatePredictionId } from '../utils/helpers';
 import logger from '../utils/logger';
 import { PredictionData } from '../types/prediction.types';
 import { Prisma } from '@prisma/client';
+import { generatePredictionHash } from './hash.service';
 
 export async function createPrediction(userId: string, data: PredictionData) {
+  // Validate prediction data first
+  validatePredictionData(data);
+
+  // Check for duplicate predictions GLOBALLY (across all users)
+  const predictionHash = generatePredictionHash(data);
+  const existingPrediction = await prisma.prediction.findFirst({
+    where: {
+      nftHash: predictionHash,
+    },
+    include: {
+      user: {
+        select: {
+          username: true,
+          displayName: true,
+        },
+      },
+    },
+  });
+
+  if (existingPrediction) {
+    const isOwnPrediction = existingPrediction.userId === userId;
+    const ownerName = existingPrediction.user.displayName || existingPrediction.user.username;
+
+    if (isOwnPrediction) {
+      logger.warn(`User ${userId} attempted to create duplicate of their own prediction`);
+      throw new AppError(
+        `You've already created this exact prediction (ID: ${existingPrediction.predictionId}). Please modify your picks to create a new prediction.`,
+        409
+      );
+    } else {
+      logger.warn(`User ${userId} attempted to create prediction already made by ${existingPrediction.userId}`);
+      throw new AppError(
+        `This exact prediction has already been claimed by another user (${ownerName}). Please modify at least one pick to create a unique prediction.`,
+        409
+      );
+    }
+  }
+
   // Generate unique prediction ID
   const predictionId = generatePredictionId();
 
-  // Validate prediction data
-  validatePredictionData(data);
-
-  // Create prediction
+  // Create prediction with hash for duplicate detection
   const prediction = await prisma.prediction.create({
     data: {
       userId,
@@ -27,6 +63,7 @@ export async function createPrediction(userId: string, data: PredictionData) {
       thirdPlace: (data.thirdPlace || {}) as Prisma.InputJsonValue,
       champion: data.champion || '',
       runnerUp: data.runnerUp || '',
+      nftHash: predictionHash,
       isPaid: false,
     },
     include: {
@@ -45,8 +82,15 @@ export async function createPrediction(userId: string, data: PredictionData) {
 }
 
 export async function getPrediction(id: string, userId: string) {
+  // Try to find by predictionId first (e.g., WC26-XXXX-XXXX-XXXX)
+  // Fall back to database ID if not found
   const prediction = await prisma.prediction.findFirst({
-    where: { id, userId },
+    where: {
+      OR: [
+        { predictionId: id, userId },
+        { id, userId }
+      ]
+    },
     include: {
       user: {
         select: {
@@ -104,6 +148,22 @@ export async function getPublicPrediction(predictionId: string) {
   return prediction;
 }
 
+
+export async function getUserInfo(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      username: true,
+      displayName: true,
+    },
+  });
+
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  return user;
+}
 
 function validatePredictionData(data: PredictionData) {
   const requiredGroups = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];

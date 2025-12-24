@@ -111,19 +111,24 @@ const COUNTRY_CODES: Record<string, string> = {
 let browserInstance: Browser | null = null;
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// MAIN EXPORT FUNCTION
+// MAIN EXPORT FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export async function generateBracketImage(
   prediction: any,
   username: string,
-  predictionId: string
+  predictionId: string,
+  blockchainData?: {
+    tokenId?: number | null;
+    nftHash?: string | null;
+    transactionHash?: string | null;
+  }
 ): Promise<{ imageBuffer: Buffer; thumbnailBuffer: Buffer }> {
   try {
     await fs.mkdir(UPLOAD_DIR, { recursive: true });
 
     // Load and compile template
-    const templateData = await prepareTemplateData(prediction, username, predictionId);
+    const templateData = await prepareTemplateData(prediction, username, predictionId, blockchainData);
     const html = await renderTemplate(templateData);
 
     // Generate image using Puppeteer
@@ -144,16 +149,35 @@ export async function generateBracketImage(
 // TEMPLATE DATA PREPARATION
 // ═══════════════════════════════════════════════════════════════════════════════
 
-async function prepareTemplateData(prediction: any, username: string, predictionId: string): Promise<Record<string, any>> {
+async function prepareTemplateData(
+  prediction: any,
+  username: string,
+  predictionId: string,
+  blockchainData?: {
+    tokenId?: number | null;
+    nftHash?: string | null;
+    transactionHash?: string | null;
+  }
+): Promise<Record<string, any>> {
+  // Use blockchain data if available, otherwise use predictionId as fallback
+  const nftHash = blockchainData?.nftHash || predictionId;
+  const tokenId = blockchainData?.tokenId || null;
+  const txHash = blockchainData?.transactionHash || null;
+
   const data: Record<string, any> = {
     username,
-    date: new Date().toLocaleDateString('fr-FR', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    date: new Date().toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     }),
-    proof: predictionId,
-    proof_short: predictionId.slice(0, 12) + '...',
+    // NFT & Blockchain data
+    nft_id: tokenId ? `#${tokenId}` : 'Pending',
+    proof: nftHash,
+    proof_short: nftHash.slice(0, 12) + '...',
+    transaction_hash: txHash ? txHash.slice(0, 10) + '...' + txHash.slice(-8) : 'Pending',
+    transaction_hash_full: txHash || 'Pending',
+    // URLs
     year: new Date().getFullYear(),
     verify_url: `https://bracket.app/verify/${predictionId}`,
     qr_url: `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://bracket.app/verify/${predictionId}`,
@@ -393,7 +417,7 @@ async function renderHtmlToImage(html: string): Promise<Buffer> {
     
     // Wait for fonts and images to load
     await page.evaluate(() => document.fonts.ready);
-    await new Promise(r => setTimeout(r, 500)); // Extra time for images
+    await new Promise(r => setTimeout(r, 1000)); // Extra time for images and JavaScript
     
     // Take screenshot
     const screenshot = await page.screenshot({
@@ -416,11 +440,11 @@ async function renderHtmlToImage(html: string): Promise<Buffer> {
 async function generateThumbnail(imageBuffer: Buffer): Promise<Buffer> {
   const browser = await getBrowser();
   const page = await browser.newPage();
-  
+
   try {
     // Thumbnail dimensions (16:9 ratio)
-    const thumbWidth = 480;
-    const thumbHeight = 270;
+    const thumbWidth = 1280;
+    const thumbHeight = 720;
     
     await page.setViewport({
       width: thumbWidth,
@@ -482,7 +506,8 @@ export async function closeBrowser(): Promise<void> {
 export async function saveImage(buffer: Buffer, filename: string): Promise<string> {
   const filepath = path.join(UPLOAD_DIR, filename);
   await fs.writeFile(filepath, buffer);
-  return `/uploads/${filename}`;
+  const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
+  return `${backendUrl}/uploads/${filename}`;
 }
 
 export async function deleteImage(filepath: string): Promise<void> {

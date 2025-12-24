@@ -3,14 +3,18 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Install dependencies for better build performance
+RUN apk add --no-cache libc6-compat
+
 # Update npm to latest version
 RUN npm install -g npm@11.6.4
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN --mount=type=cache,target=/root/.npm npm ci
+# Install dependencies with timeout and retries
+RUN npm ci --prefer-offline --no-audit --no-fund --legacy-peer-deps || \
+    npm ci --prefer-offline --no-audit --no-fund --legacy-peer-deps
 
 # Copy the rest of the application
 COPY . .

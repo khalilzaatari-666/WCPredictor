@@ -4,7 +4,8 @@ import { AppError } from '../middleware/error.middleware';
 import logger from '../utils/logger';
 import { generateBracketImage, saveImage } from './image.service';
 import { generateQRCode } from './qrcode.service';
-import { mintPredictionNFT, unlockPredictionNFT } from './blockchain.service';
+import { mintWithRetry, unlockPredictionNFT } from './blockchain.service';
+import { isBlockchainEnabled } from '../config/blockchain';
 import Stripe from 'stripe';
 
 export async function createPaymentIntent(userId: string, predictionId: string) {
@@ -20,6 +21,23 @@ export async function createPaymentIntent(userId: string, predictionId: string) 
 
   if (prediction.isPaid) {
     throw new AppError('Prediction already paid', 400);
+  }
+
+  // Check if payment already exists for this prediction
+  const existingPayment = await prisma.payment.findUnique({
+    where: { predictionId: prediction.id },
+  });
+
+  if (existingPayment && existingPayment.stripePaymentId) {
+    // Retrieve existing payment intent
+    const paymentIntent = await stripe.paymentIntents.retrieve(existingPayment.stripePaymentId);
+
+    logger.info(`Returning existing payment intent: ${paymentIntent.id}`);
+
+    return {
+      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
+    };
   }
 
   // Create Stripe payment intent
@@ -59,14 +77,14 @@ export async function confirmPayment(
   paymentIntentId: string,
   predictionId: string
 ) {
-  // Verify payment with Stripe
+  // 1. Verify payment with Stripe
   const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
   if (paymentIntent.status !== 'succeeded') {
     throw new AppError('Payment not completed', 400);
   }
 
-  // Get prediction
+  // 2. Get prediction with full data
   const prediction = await prisma.prediction.findFirst({
     where: { id: predictionId, userId },
     include: { user: true },
@@ -80,37 +98,91 @@ export async function confirmPayment(
     throw new AppError('Prediction already processed', 400);
   }
 
-  // Generate images
-  const { imageBuffer, thumbnailBuffer } = await generateBracketImage(
+  // 3. MINT NFT FIRST (before images)
+  let blockchainData: {
+    tokenId: number | null;
+    transactionHash: string | null;
+    nftHash: string | null;
+    blockNumber: number | null;
+  } = {
+    tokenId: null,
+    transactionHash: null,
+    nftHash: null,
+    blockNumber: null,
+  };
+
+  try {
+    if (isBlockchainEnabled()) {
+      logger.info('Minting NFT with blockchain data...');
+
+      // Prepare full prediction data for hashing
+      const predictionData = {
+        groupStandings: prediction.groupStandings,
+        thirdPlaceTeams: prediction.thirdPlaceTeams,
+        roundOf32: prediction.roundOf32,
+        roundOf16: prediction.roundOf16,
+        quarterFinals: prediction.quarterFinals,
+        semiFinals: prediction.semiFinals,
+        final: prediction.final,
+        thirdPlace: prediction.thirdPlace,
+        champion: prediction.champion,
+        runnerUp: prediction.runnerUp,
+      };
+
+      // Use wallet address or fallback to user ID
+      const userAddress = prediction.user.walletAddress || prediction.user.id;
+
+      // Mint with retry logic (max 3 attempts)
+      const mintResult = await mintWithRetry(
+        userAddress,
+        prediction.predictionId,
+        predictionData as any,
+        3
+      );
+
+      blockchainData = {
+        tokenId: mintResult.tokenId,
+        transactionHash: mintResult.transactionHash,
+        nftHash: mintResult.predictionHash,
+        blockNumber: mintResult.blockNumber,
+      };
+
+      logger.info('NFT minted successfully:', blockchainData);
+
+      // Unlock NFT immediately after minting
+      await unlockPredictionNFT(mintResult.tokenId);
+    } else {
+      logger.warn('Blockchain disabled - skipping NFT minting');
+    }
+  } catch (error: any) {
+    logger.error('NFT minting failed:', error);
+
+    // Decide: Should we fail the entire payment or continue?
+    // Check if blockchain is required (strict mode)
+    if (process.env.BLOCKCHAIN_REQUIRED === 'true') {
+      throw new AppError(`Payment cannot complete: ${error.message}`, 500);
+    }
+
+    // Continue without NFT in lenient mode
+    logger.warn('Continuing payment without NFT (lenient mode)');
+  }
+
+  // 4. Generate bracket image WITH blockchain data
+  const { imageBuffer } = await generateBracketImage(
     prediction,
     prediction.user.username,
-    prediction.predictionId
+    prediction.predictionId,
+    blockchainData // Pass blockchain data to image generator
   );
 
   const imageUrl = await saveImage(imageBuffer, `${prediction.predictionId}.png`);
-  const thumbnailUrl = await saveImage(thumbnailBuffer, `${prediction.predictionId}_thumb.png`);
 
-  // Generate QR code
+  // 5. Generate QR code
   const qrUrl = `${process.env.FRONTEND_URL}/prediction/${prediction.predictionId}`;
   const qrBuffer = await generateQRCode(qrUrl);
   const qrCodeUrl = await saveImage(qrBuffer, `${prediction.predictionId}_qr.png`);
 
-  // Mint NFT
-  let tokenId: number | null = null;
-  let transactionHash: string | null = null;
-
-  try {
-    const userAddress = prediction.user.walletAddress || prediction.user.id;
-    tokenId = await mintPredictionNFT(userAddress, prediction.predictionId);
-    
-    // Unlock NFT immediately after minting
-    await unlockPredictionNFT(tokenId);
-  } catch (error) {
-    logger.error('NFT minting failed, but continuing with payment:', error);
-    // Continue even if NFT minting fails
-  }
-
-  // Update prediction
+  // 6. Update database with ALL blockchain data
   await prisma.prediction.update({
     where: { id: prediction.id },
     data: {
@@ -118,12 +190,13 @@ export async function confirmPayment(
       paymentId: paymentIntent.id,
       imageUrl,
       qrCodeUrl,
-      tokenId,
-      transactionHash,
+      tokenId: blockchainData.tokenId,
+      transactionHash: blockchainData.transactionHash,
+      nftHash: blockchainData.nftHash,
     },
   });
 
-  // Update payment record
+  // 7. Update payment record
   await prisma.payment.updateMany({
     where: { stripePaymentId: paymentIntent.id },
     data: {
@@ -137,9 +210,10 @@ export async function confirmPayment(
   return {
     success: true,
     imageUrl,
-    thumbnailUrl,
     qrCodeUrl,
-    tokenId,
+    tokenId: blockchainData.tokenId,
+    transactionHash: blockchainData.transactionHash,
+    nftHash: blockchainData.nftHash,
   };
 }
 

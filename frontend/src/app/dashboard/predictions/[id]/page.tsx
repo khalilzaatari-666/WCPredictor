@@ -116,11 +116,6 @@ export default function PredictionDetailPage() {
     );
   }
 
-  if (!prediction.isPaid) {
-    router.push(`/dashboard/payment/${prediction.id}`);
-    return null;
-  }
-
   return (
     <div className="min-h-screen pb-24">
       <div className="max-w-5xl mx-auto px-4 py-8">
@@ -287,12 +282,12 @@ export default function PredictionDetailPage() {
                   </div>
                 </div>
                 <a
-                  href={`https://etherscan.io/token/${process.env.NEXT_PUBLIC_NFT_CONTRACT_ADDRESS}?a=${prediction.tokenId}`}
+                  href={`https://amoy.polygonscan.com/token/${process.env.NEXT_PUBLIC_CONTRACT_ADDRESS}?a=${prediction.tokenId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium transition-all"
                 >
-                  View on Etherscan
+                  View on PolygonScan
                 </a>
               </div>
             </div>

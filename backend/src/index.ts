@@ -3,6 +3,7 @@ import logger from './utils/logger';
 import prisma from './config/database';
 import app from './app';
 import { connectRedis } from './config/redis';
+import { initializeBlockchain } from './config/blockchain';
 
 dotenv.config();
 
@@ -17,6 +18,9 @@ async function startServer() {
         // Connect to Redis
         await connectRedis();
         logger.info('Redis connected successfully');
+
+        // Initialize Blockchain
+        initializeBlockchain();
 
         // Start server
         const server = app.listen(PORT, () => {

@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "migrate": "prisma migrate deploy",
     "migrate:dev": "prisma migrate dev",
@@ -18,7 +18,14 @@
     "list:achievements:dev": "tsx src/scripts/listAchievements.ts",
     "test": "jest",
     "lint": "eslint src --ext .ts",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "blockchain:compile": "npx hardhat compile",
+    "blockchain:test": "npx hardhat test",
+    "blockchain:deploy": "npx hardhat run scripts/deploy.ts --network amoy",
+    "blockchain:deploy:local": "npx hardhat run scripts/deploy.ts --network hardhat",
+    "blockchain:verify": "npx hardhat run scripts/verify.ts --network amoy",
+    "blockchain:test-mint": "npx hardhat run scripts/test-mint.ts --network amoy",
+    "blockchain:node": "npx hardhat node"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
@@ -54,6 +61,8 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@openzeppelin/contracts": "^5.4.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
@@ -61,14 +70,17 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
     "@types/multer": "^1.4.11",
-    "@types/node": "^20.10.6",
+    "@types/node": "^20.19.27",
     "@types/qrcode": "^1.5.5",
+    "@types/sharp": "^0.31.1",
     "@types/uuid": "^9.0.7",
     "eslint": "^8.56.0",
+    "hardhat": "^2.28.0",
     "jest": "^29.7.0",
     "prettier": "^3.1.1",
     "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
     "tsx": "^4.7.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.9.3"
   }
 }

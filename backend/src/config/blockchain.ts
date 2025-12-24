@@ -16,7 +16,7 @@ export const BLOCKCHAIN_CONFIG = {
 // Initialize blockchain connection (optional)
 export function initializeBlockchain() {
   try {
-    if (!process.env.RPC_URL || !process.env.PRIVATE_KEY || !process.env.CONTRACT_ADDRESS) {
+    if (!process.env.RPC_URL || !process.env.DEPLOYER_PRIVATE_KEY || !process.env.CONTRACT_ADDRESS) {
       logger.warn('⚠️ Blockchain configuration incomplete - running without NFT features');
       return;
     }
@@ -35,7 +35,7 @@ export function initializeBlockchain() {
       }
     );
 
-    wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+    wallet = new ethers.Wallet(process.env.DEPLOYER_PRIVATE_KEY, provider);
 
     contract = new ethers.Contract(
       process.env.CONTRACT_ADDRESS,

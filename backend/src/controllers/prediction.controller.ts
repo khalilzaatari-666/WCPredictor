@@ -3,6 +3,7 @@ import asyncHandler from 'express-async-handler';
 import * as predictionService from '../services/prediction.service';
 import { AuthRequest } from '../types/auth.types';
 import { checkAndAwardAchievements } from './achievement.controller';
+import { generateBlurredPreview } from '../services/image.service';
 
 export const createPrediction = asyncHandler(async (req: AuthRequest, res: Response) => {
   const userId = req.userId!;
@@ -46,4 +47,36 @@ export const getUserPredictions = asyncHandler(async (req: AuthRequest, res: Res
     success: true,
     data: { predictions },
   });
+});
+
+export const generatePreviewFromData = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const userId = req.userId!;
+  const predictionData = req.body;
+
+  console.log(`[Preview] Generating blurred preview from prediction data for user ${userId}`);
+
+  try {
+    // Get user info for the preview
+    const userInfo = await predictionService.getUserInfo(userId);
+    console.log(`[Preview] Found user: ${userInfo.username}`);
+
+    // Generate blurred preview (PRE-PAYMENT - no blockchain data)
+    console.log('[Preview] Generating blurred preview with prediction data...');
+    const blurredPreview = await generateBlurredPreview(
+      predictionData,
+      userInfo.username
+    );
+    console.log(`[Preview] Generated blurred preview (${blurredPreview.length} bytes)`);
+
+    // Set response headers for image
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate'); // Don't cache preview
+
+    // Send the blurred preview
+    res.send(blurredPreview);
+    console.log('[Preview] Sent blurred preview successfully');
+  } catch (error) {
+    console.error('[Preview] Error generating preview from data:', error);
+    throw error;
+  }
 });
