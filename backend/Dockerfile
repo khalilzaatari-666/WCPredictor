@@ -4,7 +4,7 @@ FROM node:20-slim AS base
 # Install dependencies only when needed
 FROM base AS deps
 WORKDIR /app
-COPY package*.json ./
+COPY package.json package-lock.json ./
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
@@ -43,7 +43,7 @@ RUN apt-get update && apt-get install -y \
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-COPY package*.json ./
+COPY package.json package-lock.json ./
 RUN npm ci
 
 # Copy Prisma schema FIRST, then generate
@@ -64,6 +64,7 @@ RUN apt-get update && apt-get install -y \
     make \
     g++ \
     && rm -rf /var/lib/apt/lists/*
+COPY package.json package-lock.json ./
 COPY prisma ./prisma
 RUN npm ci
 RUN npx prisma generate
