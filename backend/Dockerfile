@@ -138,14 +138,16 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package*.json ./
+COPY scripts/start.sh ./scripts/start.sh
 
 RUN npx prisma generate
 
 RUN mkdir -p uploads logs
+RUN chmod +x ./scripts/start.sh
 RUN chown -R nodeapp:nodejs /app
 
 USER nodeapp
 
 EXPOSE 4000
 
-CMD ["npm", "start"]
+CMD ["./scripts/start.sh"]
