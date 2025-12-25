@@ -8,6 +8,7 @@ import { ethers } from "ethers";
 import crypto from "crypto";
 import * as emailService from "./email.service";
 import * as smsService from "./sms.service";
+import { checkAndAwardAchievements } from "../controllers/achievement.controller";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
@@ -44,6 +45,11 @@ export async function loginWithWallet(data: {
       },
     });
     logger.info(`New user created via wallet: ${user.username}`);
+
+    // Award account creation achievement
+    await checkAndAwardAchievements(user.id).catch(err => {
+      logger.error('Failed to award achievements:', err);
+    });
   } else {
     // Update last login
     await prisma.user.update({
@@ -473,6 +479,11 @@ export async function registerWithEmail(data: {
     // Don't fail registration if email fails
   }
 
+  // Award account creation achievement
+  await checkAndAwardAchievements(user.id).catch(err => {
+    logger.error('Failed to award achievements:', err);
+  });
+
   logger.info(`User registered with email: ${user.username}`);
 
   return {
@@ -707,6 +718,11 @@ export async function verifyPhone(data: { phoneNumber: string; code: string }) {
   // Generate token for auto-login
   const token = generateToken(user.id);
 
+  // Award account creation achievement
+  await checkAndAwardAchievements(user.id).catch(err => {
+    logger.error('Failed to award achievements:', err);
+  });
+
   logger.info(`Phone verified for user: ${user.username}`);
 
   return {
@@ -886,6 +902,11 @@ export async function loginWithGoogle(data: {
     });
 
     logger.info(`New user created via Google: ${user.username}`);
+
+    // Award account creation achievement
+    await checkAndAwardAchievements(user.id).catch(err => {
+      logger.error('Failed to award achievements:', err);
+    });
   } else {
     // Update last login and optionally update profile info
     await prisma.user.update({
