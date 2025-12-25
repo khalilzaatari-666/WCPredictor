@@ -15,7 +15,7 @@ import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
 
 export default function ProfilePage() {
-  const { user, setAuth } = useAuthStore();
+  const { user, setAuth, logout } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -102,8 +102,7 @@ export default function ProfilePage() {
     try {
       await api.delete('/auth/account');
       // Clear auth state
-      setAuth(null, '');
-      localStorage.removeItem('authToken');
+      logout();
       // Redirect to home page
       window.location.href = '/';
     } catch (err: any) {
