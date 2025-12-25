@@ -30,6 +30,7 @@ export default function AchievementsPage() {
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unlocked' | 'locked'>('all');
 
   useEffect(() => {
     fetchAchievements();
@@ -90,10 +91,20 @@ export default function AchievementsPage() {
   };
 
   const categories = ['all', ...new Set(achievements.map((a) => a.category))];
-  const filteredAchievements =
-    filter === 'all'
-      ? achievements
-      : achievements.filter((a) => a.category === filter);
+
+  let filteredAchievements = achievements;
+
+  // Apply category filter
+  if (filter !== 'all') {
+    filteredAchievements = filteredAchievements.filter((a) => a.category === filter);
+  }
+
+  // Apply status filter
+  if (statusFilter === 'unlocked') {
+    filteredAchievements = filteredAchievements.filter((a) => a.unlocked);
+  } else if (statusFilter === 'locked') {
+    filteredAchievements = filteredAchievements.filter((a) => !a.unlocked);
+  }
 
   const stats = {
     total: achievements.length,
@@ -180,21 +191,66 @@ export default function AchievementsPage() {
         </motion.div>
       </div>
 
-      {/* Category Filter */}
-      <div className="flex gap-2 flex-wrap">
-        {categories.map((category) => (
-          <button
-            key={category}
-            onClick={() => setFilter(category)}
-            className={`px-4 py-2 rounded-lg transition-all capitalize ${
-              filter === category
-                ? 'bg-wc-primary text-white'
-                : 'glass hover:bg-white/5'
-            }`}
-          >
-            {category}
-          </button>
-        ))}
+      {/* Filters */}
+      <div className="space-y-4">
+        {/* Status Filter */}
+        <div>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">Status</h3>
+          <div className="flex gap-2 flex-wrap">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-4 py-2 rounded-lg transition-all ${
+                statusFilter === 'all'
+                  ? 'bg-wc-primary text-white'
+                  : 'glass hover:bg-white/5'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setStatusFilter('unlocked')}
+              className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+                statusFilter === 'unlocked'
+                  ? 'bg-green-500 text-white'
+                  : 'glass hover:bg-white/5'
+              }`}
+            >
+              <CheckCircle className="w-4 h-4" />
+              Unlocked
+            </button>
+            <button
+              onClick={() => setStatusFilter('locked')}
+              className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+                statusFilter === 'locked'
+                  ? 'bg-orange-500 text-white'
+                  : 'glass hover:bg-white/5'
+              }`}
+            >
+              <Lock className="w-4 h-4" />
+              Locked
+            </button>
+          </div>
+        </div>
+
+        {/* Category Filter */}
+        <div>
+          <h3 className="text-sm font-medium text-muted-foreground mb-2">Category</h3>
+          <div className="flex gap-2 flex-wrap">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setFilter(category)}
+                className={`px-4 py-2 rounded-lg transition-all capitalize ${
+                  filter === category
+                    ? 'bg-wc-primary text-white'
+                    : 'glass hover:bg-white/5'
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Achievements Grid */}
