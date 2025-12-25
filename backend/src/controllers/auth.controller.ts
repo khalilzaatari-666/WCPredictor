@@ -118,6 +118,23 @@ export const logout = asyncHandler(async (req: AuthRequest, res: Response) => {
   });
 });
 
+export const deleteAccount = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const userId = req.userId!;
+  const token = req.headers.authorization?.split(' ')[1];
+
+  await authService.deleteAccount(userId);
+
+  // Invalidate token
+  if (token) {
+    await authService.invalidateToken(token);
+  }
+
+  res.json({
+    success: true,
+    message: 'Account deleted successfully',
+  });
+});
+
 // ==================== EMAIL AUTHENTICATION ====================
 
 export const registerWithEmail = asyncHandler(async (req: Request, res: Response) => {

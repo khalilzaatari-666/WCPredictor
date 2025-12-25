@@ -10,8 +10,6 @@ import {
   Save,
   Camera,
   Shield,
-  Bell,
-  Palette,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuthStore } from '@/stores/authStore';
@@ -21,6 +19,13 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const [formData, setFormData] = useState({
     username: user?.username || '',
@@ -89,6 +94,63 @@ export default function ProfilePage() {
       setTimeout(() => setError(''), 5000);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteLoading(true);
+    try {
+      await api.delete('/auth/account');
+      // Clear auth state
+      setAuth(null, '');
+      localStorage.removeItem('authToken');
+      // Redirect to home page
+      window.location.href = '/';
+    } catch (err: any) {
+      console.error('Delete account error:', err);
+      setError(err.response?.data?.message || 'Failed to delete account');
+      setShowDeleteConfirm(false);
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate passwords match
+    if (newPassword !== confirmPassword) {
+      setError('New passwords do not match');
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+
+    // Validate password length
+    if (newPassword.length < 6) {
+      setError('Password must be at least 6 characters long');
+      setTimeout(() => setError(''), 5000);
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      await api.put('/auth/change-password', {
+        currentPassword,
+        newPassword,
+      });
+      setSuccess('Password changed successfully!');
+      setShowChangePassword(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => setSuccess(''), 5000);
+    } catch (err: any) {
+      console.error('Change password error:', err);
+      setError(err.response?.data?.message || 'Failed to change password');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
@@ -257,9 +319,8 @@ export default function ProfilePage() {
         </motion.div>
       </div>
 
-      {/* Additional Settings */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Security */}
+      {/* Security */}
+      {user?.authProvider === 'email' && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -271,54 +332,18 @@ export default function ProfilePage() {
             Security
           </h3>
           <div className="space-y-3">
-            <button className="w-full p-3 rounded-lg glass hover:bg-white/5 transition-all text-left">
+            <button
+              onClick={() => setShowChangePassword(true)}
+              className="w-full p-3 rounded-lg glass hover:bg-white/5 transition-all text-left"
+            >
               <div className="font-medium">Change Password</div>
               <div className="text-xs text-muted-foreground">
                 Update your account password
               </div>
             </button>
-            <button className="w-full p-3 rounded-lg glass hover:bg-white/5 transition-all text-left">
-              <div className="font-medium">Two-Factor Authentication</div>
-              <div className="text-xs text-muted-foreground">
-                Enable 2FA for extra security
-              </div>
-            </button>
           </div>
         </motion.div>
-
-        {/* Notifications */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="glass-card"
-        >
-          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <Bell className="w-6 h-6 text-wc-accent" />
-            Notifications
-          </h3>
-          <div className="space-y-3">
-            <label className="flex items-center justify-between p-3 rounded-lg glass hover:bg-white/5 transition-all cursor-pointer">
-              <div>
-                <div className="font-medium">Email Notifications</div>
-                <div className="text-xs text-muted-foreground">
-                  Receive updates via email
-                </div>
-              </div>
-              <input type="checkbox" className="rounded" defaultChecked />
-            </label>
-            <label className="flex items-center justify-between p-3 rounded-lg glass hover:bg-white/5 transition-all cursor-pointer">
-              <div>
-                <div className="font-medium">Match Reminders</div>
-                <div className="text-xs text-muted-foreground">
-                  Get notified before matches
-                </div>
-              </div>
-              <input type="checkbox" className="rounded" defaultChecked />
-            </label>
-          </div>
-        </motion.div>
-      </div>
+      )}
 
       {/* Danger Zone */}
       <motion.div
@@ -329,7 +354,10 @@ export default function ProfilePage() {
       >
         <h3 className="text-xl font-bold mb-4 text-red-500">Danger Zone</h3>
         <div className="space-y-3">
-          <button className="w-full p-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-all text-left text-red-500 border border-red-500/30">
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="w-full p-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-all text-left text-red-500 border border-red-500/30"
+          >
             <div className="font-medium">Delete Account</div>
             <div className="text-xs">
               Permanently delete your account and all data
@@ -337,6 +365,129 @@ export default function ProfilePage() {
           </button>
         </div>
       </motion.div>
+
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-card max-w-md w-full"
+          >
+            <h3 className="text-2xl font-bold mb-4">Change Password</h3>
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="input-field"
+                  required
+                  placeholder="Enter current password"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="input-field"
+                  required
+                  placeholder="Enter new password"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="input-field"
+                  required
+                  placeholder="Confirm new password"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowChangePassword(false);
+                    setCurrentPassword('');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                  }}
+                  disabled={passwordLoading}
+                  className="flex-1 py-3 px-4 rounded-xl glass hover:bg-white/5 transition-all font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="flex-1 py-3 px-4 rounded-xl bg-wc-primary hover:bg-wc-primary/80 transition-all font-medium text-white flex items-center justify-center gap-2"
+                >
+                  {passwordLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Changing...</span>
+                    </>
+                  ) : (
+                    <span>Change Password</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-card max-w-md w-full border-2 border-red-500/30"
+          >
+            <h3 className="text-2xl font-bold text-red-500 mb-4">Delete Account?</h3>
+            <p className="text-muted-foreground mb-6">
+              Are you sure you want to delete your account? This action cannot be undone.
+              All your predictions, achievements, and data will be permanently deleted.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleteLoading}
+                className="flex-1 py-3 px-4 rounded-xl glass hover:bg-white/5 transition-all font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={deleteLoading}
+                className="flex-1 py-3 px-4 rounded-xl bg-red-500 hover:bg-red-600 transition-all font-medium text-white flex items-center justify-center gap-2"
+              >
+                {deleteLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <span>Delete Account</span>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

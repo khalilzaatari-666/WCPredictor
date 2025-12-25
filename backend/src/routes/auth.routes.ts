@@ -7,6 +7,7 @@ import {
   addEmailToProfile,
   addPhoneToProfile,
   logout,
+  deleteAccount,
   registerWithEmail,
   verifyEmail,
   loginWithEmail,
@@ -70,5 +71,6 @@ router.post('/profile/add-email', authMiddleware, addEmailToProfile);
 router.post('/profile/add-phone', authMiddleware, addPhoneToProfile);
 router.put('/change-password', authMiddleware, validateRequest(changePasswordSchema), changePassword);
 router.post('/logout', authMiddleware, logout);
+router.delete('/account', authMiddleware, deleteAccount);
 
 export default router;

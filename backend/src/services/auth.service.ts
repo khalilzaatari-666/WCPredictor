@@ -403,6 +403,23 @@ export async function isTokenBlacklisted(token: string): Promise<boolean> {
   return result === '1';
 }
 
+export async function deleteAccount(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new AppError('User not found', 404);
+  }
+
+  // Delete user (cascade will delete related data like predictions, payments, achievements)
+  await prisma.user.delete({
+    where: { id: userId },
+  });
+
+  logger.info(`User account deleted: ${user.username}`);
+}
+
 function generateToken(userId: string): string {
   return jwt.sign(
     { userId }, 
