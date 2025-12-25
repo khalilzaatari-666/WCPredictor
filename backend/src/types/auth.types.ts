@@ -14,6 +14,7 @@ export interface UserResponse {
   walletAddress?: string;
   displayName?: string;
   avatar?: string;
+  authProvider?: string;
   createdAt: Date;
 }
 

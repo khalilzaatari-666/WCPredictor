@@ -71,6 +71,7 @@ export async function loginWithWallet(data: {
       walletAddress: user.walletAddress,
       displayName: user.displayName,
       avatar: user.avatar,
+      authProvider: user.authProvider,
     },
     token,
   };
@@ -83,9 +84,11 @@ export async function getUserProfile(userId: string) {
       id: true,
       username: true,
       email: true,
+      phoneNumber: true,
       walletAddress: true,
       displayName: true,
       avatar: true,
+      authProvider: true,
       createdAt: true,
       lastLogin: true,
       _count: {
@@ -193,6 +196,7 @@ export async function updateUserProfile(
       walletAddress: true,
       displayName: true,
       avatar: true,
+      authProvider: true,
     },
   });
 
@@ -596,6 +600,7 @@ export async function loginWithEmail(data: { email: string; password: string }) 
       emailVerified: user.emailVerified,
       displayName: user.displayName,
       avatar: user.avatar,
+      authProvider: user.authProvider,
     },
     token,
   };
@@ -834,6 +839,7 @@ export async function verifyLoginOTP(data: { phoneNumber: string; code: string }
       phoneVerified: user.phoneVerified,
       displayName: user.displayName,
       avatar: user.avatar,
+      authProvider: user.authProvider,
     },
     token,
   };
@@ -950,6 +956,7 @@ export async function loginWithGoogle(data: {
       displayName: user.displayName,
       avatar: user.avatar,
       phoneNumber: user.phoneNumber,
+      authProvider: user.authProvider,
     },
     token,
   };

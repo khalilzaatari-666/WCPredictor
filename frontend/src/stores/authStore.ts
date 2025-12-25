@@ -9,6 +9,7 @@ interface User {
   walletAddress?: string;
   displayName?: string;
   avatar?: string;
+  authProvider?: string;
 }
 
 interface AuthState {
