@@ -391,7 +391,21 @@ async function getBrowser(): Promise<Browser> {
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--font-render-hinting=none',
+        '--disable-software-rasterizer',
+        '--disable-extensions',
+        '--disable-background-networking',
+        '--disable-default-apps',
+        '--disable-sync',
+        '--disable-translate',
+        '--hide-scrollbars',
+        '--metrics-recording-only',
+        '--mute-audio',
+        '--no-first-run',
+        '--safebrowsing-disable-auto-update',
+        '--disable-crash-reporter',
+        '--disable-breakpad',
       ],
+      executablePath: process.env.CHROME_BIN || undefined,
     });
   }
   return browserInstance;
