@@ -383,8 +383,22 @@ function generateInlineHtml(data: Record<string, any>): string {
 
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance) {
+    // Try to find Chromium executable in common locations
+    let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
+
+    // For Railway/Nix environments, try to find chromium
+    if (!executablePath && process.env.NIXPACKS_PLAN_PATH) {
+      const { execSync } = require('child_process');
+      try {
+        executablePath = execSync('which chromium').toString().trim();
+      } catch (e) {
+        logger.warn('Chromium not found in PATH, using Puppeteer default');
+      }
+    }
+
     browserInstance = await puppeteer.launch({
       headless: true,
+      executablePath: executablePath || undefined,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -405,8 +419,9 @@ async function getBrowser(): Promise<Browser> {
         '--disable-crash-reporter',
         '--disable-breakpad',
       ],
-      executablePath: process.env.CHROME_BIN || undefined,
     });
+
+    logger.info(`Browser launched with executable: ${executablePath || 'default'}`);
   }
   return browserInstance;
 }
