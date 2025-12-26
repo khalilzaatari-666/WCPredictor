@@ -383,18 +383,11 @@ function generateInlineHtml(data: Record<string, any>): string {
 
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance) {
-    // Try to find Chromium executable in common locations
-    let executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
+    // The Dockerfile sets PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    // If not set (local dev), try common locations or use bundled Chromium
+    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
 
-    // For Railway/Nix environments, try to find chromium
-    if (!executablePath && process.env.NIXPACKS_PLAN_PATH) {
-      const { execSync } = require('child_process');
-      try {
-        executablePath = execSync('which chromium').toString().trim();
-      } catch (e) {
-        logger.warn('Chromium not found in PATH, using Puppeteer default');
-      }
-    }
+    logger.info(`Launching browser with executable: ${executablePath || 'bundled Chromium'}`);
 
     browserInstance = await puppeteer.launch({
       headless: true,
@@ -404,24 +397,12 @@ async function getBrowser(): Promise<Browser> {
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
-        '--font-render-hinting=none',
         '--disable-software-rasterizer',
         '--disable-extensions',
-        '--disable-background-networking',
-        '--disable-default-apps',
-        '--disable-sync',
-        '--disable-translate',
-        '--hide-scrollbars',
-        '--metrics-recording-only',
-        '--mute-audio',
-        '--no-first-run',
-        '--safebrowsing-disable-auto-update',
-        '--disable-crash-reporter',
-        '--disable-breakpad',
       ],
     });
 
-    logger.info(`Browser launched with executable: ${executablePath || 'default'}`);
+    logger.info('Browser launched successfully');
   }
   return browserInstance;
 }
