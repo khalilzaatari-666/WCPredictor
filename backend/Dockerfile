@@ -96,6 +96,9 @@ RUN npm run build
 FROM base AS production
 WORKDIR /app
 
+# Cache buster - change this to force rebuild
+ARG CACHEBUST=2025-12-27
+
 ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs
