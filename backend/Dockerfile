@@ -141,11 +141,13 @@ COPY --from=builder /app/scripts/start.sh ./scripts/start.sh
 
 RUN npx prisma generate
 
-# Install Playwright browsers (deps already installed above)
-RUN npx playwright install chromium
-
 RUN mkdir -p uploads logs
 RUN chmod +x ./scripts/start.sh
+
+# Set Playwright browsers path and install before switching users
+ENV PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright
+RUN npx playwright install chromium
+
 RUN chown -R nodeapp:nodejs /app
 
 USER nodeapp
