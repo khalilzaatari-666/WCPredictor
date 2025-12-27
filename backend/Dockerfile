@@ -90,7 +90,7 @@ COPY prisma ./prisma
 RUN npm ci
 RUN npx prisma generate
 # Cache buster - forces rebuild from this point
-ARG CACHEBUST=2025-12-27-v7
+ARG CACHEBUST=2025-12-27-v8
 COPY . .
 RUN npm run build
 
@@ -99,7 +99,7 @@ FROM base AS production
 WORKDIR /app
 
 # Cache buster - change this to force rebuild
-ARG CACHEBUST=2025-12-27-v7
+ARG CACHEBUST=2025-12-27-v8
 
 ENV NODE_ENV=production
 
@@ -108,6 +108,7 @@ RUN adduser --system --uid 1001 nodeapp
 
 RUN apt-get update && apt-get install -y \
     python3 \
+    gosu \
     fonts-liberation \
     libnss3 \
     libxss1 \
@@ -138,12 +139,13 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/scripts/start.sh ./scripts/start.sh
+COPY --from=builder /app/scripts/entrypoint.sh ./scripts/entrypoint.sh
 COPY --from=builder /app/templates ./templates
 
 RUN npx prisma generate
 
 RUN mkdir -p uploads/predictions uploads/previews logs
-RUN chmod +x ./scripts/start.sh
+RUN chmod +x ./scripts/start.sh ./scripts/entrypoint.sh
 
 # Set Playwright browsers path and install before switching users
 ENV PLAYWRIGHT_BROWSERS_PATH=/app/ms-playwright
@@ -151,8 +153,6 @@ RUN npx playwright install chromium
 
 RUN chown -R nodeapp:nodejs /app
 
-USER nodeapp
-
 EXPOSE 4000
 
-CMD ["./scripts/start.sh"]
+CMD ["./scripts/entrypoint.sh"]
