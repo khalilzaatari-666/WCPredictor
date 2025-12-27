@@ -108,8 +108,6 @@ RUN adduser --system --uid 1001 nodeapp
 
 RUN apt-get update && apt-get install -y \
     python3 \
-    chromium \
-    chromium-sandbox \
     fonts-liberation \
     libnss3 \
     libxss1 \
@@ -135,10 +133,6 @@ RUN apt-get update && apt-get install -y \
     libpixman-1-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Tell Puppeteer to use installed Chromium
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
@@ -146,6 +140,9 @@ COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/scripts/start.sh ./scripts/start.sh
 
 RUN npx prisma generate
+
+# Install Playwright browsers (deps already installed above)
+RUN npx playwright install chromium
 
 RUN mkdir -p uploads logs
 RUN chmod +x ./scripts/start.sh

@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import puppeteer, { Browser } from 'puppeteer';
+import { chromium, Browser } from 'playwright';
 import fs from 'fs/promises';
 import path from 'path';
 import Handlebars from 'handlebars';
@@ -383,38 +383,18 @@ function generateInlineHtml(data: Record<string, any>): string {
 
 async function getBrowser(): Promise<Browser> {
   if (!browserInstance) {
-    // The Dockerfile sets PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-    // If not set (local dev), try common locations or use bundled Chromium
-    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
+    logger.info('[PLAYWRIGHT] Launching Chromium browser');
 
-    logger.info(`[v6-CRASHPAD-DATABASE] Launching browser with executable: ${executablePath || 'bundled Chromium'}`);
-
-    // Create crash dumps directory for crashpad
-    const crashDumpsDir = '/tmp/chrome-crashpad';
-    try {
-      await fs.mkdir(crashDumpsDir, { recursive: true });
-      logger.info(`[v6-CRASHPAD-DATABASE] Created crash dumps directory: ${crashDumpsDir}`);
-    } catch (error) {
-      logger.warn(`[v6-CRASHPAD-DATABASE] Could not create crash dumps dir: ${error}`);
-    }
-
-    browserInstance = await puppeteer.launch({
+    browserInstance = await chromium.launch({
       headless: true,
-      executablePath: executablePath || undefined,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-zygote',
-        '--disable-software-rasterizer',
-        '--disable-extensions',
-        '--headless=new',
-        `--crash-dumps-dir=${crashDumpsDir}`,
       ],
     });
 
-    logger.info('[v6-CRASHPAD-DATABASE] Browser launched successfully');
+    logger.info('[PLAYWRIGHT] Browser launched successfully');
   }
   return browserInstance;
 }
@@ -422,25 +402,24 @@ async function getBrowser(): Promise<Browser> {
 async function renderHtmlToImage(html: string): Promise<Buffer> {
   const browser = await getBrowser();
   const page = await browser.newPage();
-  
+
   try {
     // Set viewport to match our canvas size
-    await page.setViewport({
+    await page.setViewportSize({
       width: CANVAS_WIDTH,
       height: CANVAS_HEIGHT,
-      deviceScaleFactor: 1,
     });
-    
+
     // Load HTML content
     await page.setContent(html, {
-      waitUntil: ['networkidle0', 'domcontentloaded'],
+      waitUntil: 'networkidle',
       timeout: 30000,
     });
-    
+
     // Wait for fonts and images to load
     await page.evaluate(() => document.fonts.ready);
     await new Promise(r => setTimeout(r, 1000)); // Extra time for images and JavaScript
-    
+
     // Take screenshot
     const screenshot = await page.screenshot({
       type: 'png',
@@ -452,8 +431,8 @@ async function renderHtmlToImage(html: string): Promise<Buffer> {
         height: CANVAS_HEIGHT,
       },
     });
-    
-    return screenshot as Buffer;
+
+    return screenshot;
   } finally {
     await page.close();
   }
@@ -467,13 +446,12 @@ async function generateThumbnail(imageBuffer: Buffer): Promise<Buffer> {
     // Thumbnail dimensions (16:9 ratio)
     const thumbWidth = 1280;
     const thumbHeight = 720;
-    
-    await page.setViewport({
+
+    await page.setViewportSize({
       width: thumbWidth,
       height: thumbHeight,
-      deviceScaleFactor: 1,
     });
-    
+
     // Create an HTML page that displays the image scaled down
     const base64Image = imageBuffer.toString('base64');
     const html = `
@@ -482,14 +460,14 @@ async function generateThumbnail(imageBuffer: Buffer): Promise<Buffer> {
       <head>
         <style>
           * { margin: 0; padding: 0; }
-          body { 
-            width: ${thumbWidth}px; 
-            height: ${thumbHeight}px; 
+          body {
+            width: ${thumbWidth}px;
+            height: ${thumbHeight}px;
             overflow: hidden;
           }
-          img { 
-            width: 100%; 
-            height: 100%; 
+          img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
           }
         </style>
@@ -499,15 +477,15 @@ async function generateThumbnail(imageBuffer: Buffer): Promise<Buffer> {
       </body>
       </html>
     `;
-    
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    
+
+    await page.setContent(html, { waitUntil: 'networkidle' });
+
     const thumbnail = await page.screenshot({
       type: 'png',
       clip: { x: 0, y: 0, width: thumbWidth, height: thumbHeight },
     });
-    
-    return thumbnail as Buffer;
+
+    return thumbnail;
   } finally {
     await page.close();
   }
