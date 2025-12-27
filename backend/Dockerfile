@@ -143,7 +143,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package*.json ./
-COPY scripts/start.sh ./scripts/start.sh
+COPY --from=builder /app/scripts/start.sh ./scripts/start.sh
 
 RUN npx prisma generate
 

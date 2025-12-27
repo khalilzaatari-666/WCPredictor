@@ -387,7 +387,8 @@ async function getBrowser(): Promise<Browser> {
     // If not set (local dev), try common locations or use bundled Chromium
     const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
 
-    logger.info(`Launching browser with executable: ${executablePath || 'bundled Chromium'}`);
+    logger.info(`[v5-CRASHPAD-FIX] Launching browser with executable: ${executablePath || 'bundled Chromium'}`);
+    logger.info('[v5-CRASHPAD-FIX] Using simplified Chrome flags with Crashpad disabled');
 
     browserInstance = await puppeteer.launch({
       headless: true,
