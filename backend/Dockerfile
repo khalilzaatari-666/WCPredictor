@@ -141,7 +141,7 @@ COPY --from=builder /app/scripts/start.sh ./scripts/start.sh
 
 RUN npx prisma generate
 
-RUN mkdir -p uploads logs
+RUN mkdir -p uploads/predictions uploads/previews logs
 RUN chmod +x ./scripts/start.sh
 
 # Set Playwright browsers path and install before switching users
