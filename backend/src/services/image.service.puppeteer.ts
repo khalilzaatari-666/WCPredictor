@@ -400,6 +400,7 @@ async function getBrowser(): Promise<Browser> {
         '--disable-software-rasterizer',
         '--disable-extensions',
         '--disable-crash-reporter',
+        '--crash-dumps-dir=/tmp/chromium-crashpad',
         '--disable-features=VizDisplayCompositor',
         '--single-process',
         '--no-zygote',
