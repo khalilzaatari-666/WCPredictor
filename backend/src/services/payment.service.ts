@@ -2,11 +2,13 @@ import { stripe, STRIPE_CONFIG } from '../config/stripe';
 import prisma from '../config/database';
 import { AppError } from '../middleware/error.middleware';
 import logger from '../utils/logger';
-import { generateBracketImage, saveImage } from './image.service';
+import { generateBracketImage, savePredictionImage } from './image.service';
 import { generateQRCode } from './qrcode.service';
 import { mintWithRetry, unlockPredictionNFT } from './blockchain.service';
 import { isBlockchainEnabled } from '../config/blockchain';
 import Stripe from 'stripe';
+import fs from 'fs/promises';
+import path from 'path';
 
 export async function createPaymentIntent(userId: string, predictionId: string) {
   // Get prediction
@@ -175,12 +177,18 @@ export async function confirmPayment(
     blockchainData // Pass blockchain data to image generator
   );
 
-  const imageUrl = await saveImage(imageBuffer, `${prediction.predictionId}.png`);
+  const imageUrl = await savePredictionImage(imageBuffer, prediction.predictionId);
 
-  // 5. Generate QR code
+  // 5. Generate QR code and save to predictions directory
   const qrUrl = `${process.env.FRONTEND_URL}/prediction/${prediction.predictionId}`;
   const qrBuffer = await generateQRCode(qrUrl);
-  const qrCodeUrl = await saveImage(qrBuffer, `${prediction.predictionId}_qr.png`);
+
+  // Save QR code directly to predictions directory
+  const qrFilename = `${prediction.predictionId}_qr.png`;
+  const qrFilepath = path.join(__dirname, '../../uploads/predictions', qrFilename);
+  await fs.writeFile(qrFilepath, qrBuffer);
+  const qrCodeUrl = `/uploads/predictions/${qrFilename}`;
+  logger.info(`Saved QR code: ${qrFilename}`);
 
   // 6. Update database with ALL blockchain data
   await prisma.prediction.update({
