@@ -107,7 +107,9 @@ export const checkAndAwardAchievements = async (userId: string) => {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        predictions: true, // Get ALL predictions, not just scored ones
+        predictions: {
+          where: { isScored: true },
+        },
         achievements: {
           include: {
             achievement: true,
@@ -117,10 +119,6 @@ export const checkAndAwardAchievements = async (userId: string) => {
     });
 
     if (!user) return [];
-
-    // Separate scored and all predictions for different achievement checks
-    const allPredictions = user.predictions;
-    const scoredPredictions = user.predictions.filter(p => p.isScored);
 
     // Get all achievements
     const allAchievements = await prisma.achievement.findMany();
@@ -151,53 +149,53 @@ export const checkAndAwardAchievements = async (userId: string) => {
           isCompleted = hasAvatar && hasDisplayName;
           break;
 
-        // Prediction Count Achievements - Count ALL predictions (not just scored)
+        // Prediction Count Achievements
         case 'FIRST_PREDICTION':
-          progress = allPredictions.length;
-          isCompleted = allPredictions.length >= 1;
+          progress = user.predictions.length;
+          isCompleted = user.predictions.length >= 1;
           break;
 
         case 'PREDICTIONS_5':
-          progress = allPredictions.length;
-          isCompleted = allPredictions.length >= 5;
+          progress = user.predictions.length;
+          isCompleted = user.predictions.length >= 5;
           break;
 
         case 'PREDICTIONS_10':
-          progress = allPredictions.length;
-          isCompleted = allPredictions.length >= 10;
+          progress = user.predictions.length;
+          isCompleted = user.predictions.length >= 10;
           break;
 
         case 'PREDICTIONS_25':
-          progress = allPredictions.length;
-          isCompleted = allPredictions.length >= 25;
+          progress = user.predictions.length;
+          isCompleted = user.predictions.length >= 25;
           break;
 
         case 'PREDICTIONS_50':
-          progress = allPredictions.length;
-          isCompleted = allPredictions.length >= 50;
+          progress = user.predictions.length;
+          isCompleted = user.predictions.length >= 50;
           break;
 
-        // Accuracy Achievements - Only count scored predictions
+        // Accuracy Achievements
         case 'ACCURACY_50':
-          const acc50Predictions = scoredPredictions.filter(p => p.accuracy && p.accuracy >= 50);
+          const acc50Predictions = user.predictions.filter(p => p.accuracy && p.accuracy >= 50);
           progress = acc50Predictions.length > 0 ? Math.max(...acc50Predictions.map(p => p.accuracy || 0)) : 0;
           isCompleted = acc50Predictions.length > 0;
           break;
 
         case 'ACCURACY_70':
-          const acc70Predictions = scoredPredictions.filter(p => p.accuracy && p.accuracy >= 70);
+          const acc70Predictions = user.predictions.filter(p => p.accuracy && p.accuracy >= 70);
           progress = acc70Predictions.length > 0 ? Math.max(...acc70Predictions.map(p => p.accuracy || 0)) : 0;
           isCompleted = acc70Predictions.length > 0;
           break;
 
         case 'ACCURACY_90':
-          const acc90Predictions = scoredPredictions.filter(p => p.accuracy && p.accuracy >= 90);
+          const acc90Predictions = user.predictions.filter(p => p.accuracy && p.accuracy >= 90);
           progress = acc90Predictions.length > 0 ? Math.max(...acc90Predictions.map(p => p.accuracy || 0)) : 0;
           isCompleted = acc90Predictions.length > 0;
           break;
 
         case 'PERFECT_PREDICTION':
-          const perfectPredictions = scoredPredictions.filter(p => p.accuracy === 100);
+          const perfectPredictions = user.predictions.filter(p => p.accuracy === 100);
           progress = perfectPredictions.length;
           isCompleted = perfectPredictions.length >= 1;
           break;
