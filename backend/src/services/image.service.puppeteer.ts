@@ -389,40 +389,19 @@ async function getBrowser(): Promise<Browser> {
 
     logger.info(`Launching browser with executable: ${executablePath || 'bundled Chromium'}`);
 
-    // Disable crashpad environment variables
-    process.env.CHROME_CRASHPAD_PIPE_NAME = '';
-    process.env.BREAKPAD_DISABLE = '1';
-
     browserInstance = await puppeteer.launch({
       headless: true,
       executablePath: executablePath || undefined,
-      env: {
-        ...process.env,
-        CHROME_CRASHPAD_PIPE_NAME: '',
-        BREAKPAD_DISABLE: '1',
-      },
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
+        '--no-zygote',
         '--disable-software-rasterizer',
         '--disable-extensions',
-        '--disable-crash-reporter',
-        '--disable-breakpad',
-        '--disable-features=VizDisplayCompositor',
-        '--no-zygote',
-        '--disable-accelerated-2d-canvas',
-        '--disable-background-timer-throttling',
-        '--disable-backgrounding-occluded-windows',
-        '--disable-component-extensions-with-background-pages',
-        '--disable-features=TranslateUI,BlinkGenPropertyTrees',
-        '--disable-ipc-flooding-protection',
-        '--disable-renderer-backgrounding',
-        '--force-color-profile=srgb',
-        '--hide-scrollbars',
-        '--metrics-recording-only',
-        '--mute-audio',
+        '--disable-features=Crashpad',
+        '--headless=new',
       ],
     });
 
