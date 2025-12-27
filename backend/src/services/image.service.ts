@@ -1,4 +1,4 @@
-import * as puppeteerService from './image.service.puppeteer';
+import * as puppeteerService from './image.service.playwright';
 import sharp from 'sharp';
 import fs from 'fs/promises';
 import path from 'path';
