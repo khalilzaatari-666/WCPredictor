@@ -89,6 +89,8 @@ COPY package.json package-lock.json ./
 COPY prisma ./prisma
 RUN npm ci
 RUN npx prisma generate
+# Cache buster - forces rebuild from this point
+ARG CACHEBUST=2025-12-27-v2
 COPY . .
 RUN npm run build
 
