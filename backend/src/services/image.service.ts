@@ -98,7 +98,8 @@ export async function savePredictionImage(buffer: Buffer, predictionId: string):
     await fs.writeFile(filepath, buffer);
 
     logger.info(`Saved prediction image: ${filename}`);
-    return `/uploads/predictions/${filename}`;
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
+    return `${backendUrl}/uploads/predictions/${filename}`;
   } catch (error) {
     logger.error('Error saving prediction image:', error);
     throw new Error('Failed to save prediction image');
@@ -118,7 +119,8 @@ export async function savePredictionThumbnail(buffer: Buffer, predictionId: stri
     await fs.writeFile(filepath, buffer);
 
     logger.info(`Saved prediction thumbnail: ${filename}`);
-    return `/uploads/predictions/${filename}`;
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
+    return `${backendUrl}/uploads/predictions/${filename}`;
   } catch (error) {
     logger.error('Error saving prediction thumbnail:', error);
     throw new Error('Failed to save prediction thumbnail');
@@ -138,7 +140,8 @@ export async function saveBlurredThumbnail(buffer: Buffer, predictionId: string)
     await fs.writeFile(filepath, buffer);
 
     logger.info(`Saved blurred thumbnail: ${filename}`);
-    return `/uploads/predictions/${filename}`;
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
+    return `${backendUrl}/uploads/predictions/${filename}`;
   } catch (error) {
     logger.error('Error saving blurred thumbnail:', error);
     throw new Error('Failed to save blurred thumbnail');

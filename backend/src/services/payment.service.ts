@@ -187,7 +187,8 @@ export async function confirmPayment(
   const qrFilename = `${prediction.predictionId}_qr.png`;
   const qrFilepath = path.join(__dirname, '../../uploads/predictions', qrFilename);
   await fs.writeFile(qrFilepath, qrBuffer);
-  const qrCodeUrl = `/uploads/predictions/${qrFilename}`;
+  const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
+  const qrCodeUrl = `${backendUrl}/uploads/predictions/${qrFilename}`;
   logger.info(`Saved QR code: ${qrFilename}`);
 
   // 6. Update database with ALL blockchain data
