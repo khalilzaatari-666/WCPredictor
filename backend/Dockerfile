@@ -90,7 +90,7 @@ COPY prisma ./prisma
 RUN npm ci
 RUN npx prisma generate
 # Cache buster - forces rebuild from this point
-ARG CACHEBUST=2025-12-27-v4
+ARG CACHEBUST=2025-12-27-v5
 COPY . .
 RUN npm run build
 
@@ -99,7 +99,7 @@ FROM base AS production
 WORKDIR /app
 
 # Cache buster - change this to force rebuild
-ARG CACHEBUST=2025-12-27-v4
+ARG CACHEBUST=2025-12-27-v5
 
 ENV NODE_ENV=production
 
