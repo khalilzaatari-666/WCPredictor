@@ -387,8 +387,16 @@ async function getBrowser(): Promise<Browser> {
     // If not set (local dev), try common locations or use bundled Chromium
     const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_BIN;
 
-    logger.info(`[v5-CRASHPAD-FIX] Launching browser with executable: ${executablePath || 'bundled Chromium'}`);
-    logger.info('[v5-CRASHPAD-FIX] Using simplified Chrome flags with Crashpad disabled');
+    logger.info(`[v6-CRASHPAD-DATABASE] Launching browser with executable: ${executablePath || 'bundled Chromium'}`);
+
+    // Create crash dumps directory for crashpad
+    const crashDumpsDir = '/tmp/chrome-crashpad';
+    try {
+      await fs.mkdir(crashDumpsDir, { recursive: true });
+      logger.info(`[v6-CRASHPAD-DATABASE] Created crash dumps directory: ${crashDumpsDir}`);
+    } catch (error) {
+      logger.warn(`[v6-CRASHPAD-DATABASE] Could not create crash dumps dir: ${error}`);
+    }
 
     browserInstance = await puppeteer.launch({
       headless: true,
@@ -401,12 +409,12 @@ async function getBrowser(): Promise<Browser> {
         '--no-zygote',
         '--disable-software-rasterizer',
         '--disable-extensions',
-        '--disable-features=Crashpad',
         '--headless=new',
+        `--crash-dumps-dir=${crashDumpsDir}`,
       ],
     });
 
-    logger.info('Browser launched successfully');
+    logger.info('[v6-CRASHPAD-DATABASE] Browser launched successfully');
   }
   return browserInstance;
 }
