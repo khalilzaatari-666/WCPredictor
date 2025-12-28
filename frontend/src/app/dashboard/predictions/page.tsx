@@ -52,8 +52,32 @@ export default function PredictionsPage() {
     );
   });
 
+  // Calculate most picked champion
+  const getMostPickedChampion = () => {
+    if (predictions.length === 0) return '-';
+
+    const championCounts: Record<string, number> = {};
+    predictions.forEach((pred) => {
+      if (pred.champion) {
+        championCounts[pred.champion] = (championCounts[pred.champion] || 0) + 1;
+      }
+    });
+
+    let mostPicked = '';
+    let maxCount = 0;
+    Object.entries(championCounts).forEach(([champion, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        mostPicked = champion;
+      }
+    });
+
+    return mostPicked || '-';
+  };
+
   const stats = {
     total: predictions.length,
+    mostPickedChampion: getMostPickedChampion(),
   };
 
   if (loading) {
@@ -122,7 +146,7 @@ export default function PredictionsPage() {
         >
           <div className="text-sm text-muted-foreground mb-1">Most Picked Champion</div>
           <div className="text-xl font-bold text-wc-primary">
-            {predictions.length > 0 ? predictions[0].champion : '-'}
+            {stats.mostPickedChampion}
           </div>
         </motion.div>
       </div>
